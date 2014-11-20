@@ -123,6 +123,17 @@ def index():
     return render_template('frame.html', data=data)
 
 
+@app.route("/mmmlist")
+def mmm_list():
+    message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
+    task_list = ({'name': 'task 1', 'progress': 10},)
+
+    data = dict()
+    data['message_list'] = message_list
+    data['task_list'] = task_list
+    data['page_name'] = 'ToDo'
+    return render_template('frame.html', data=data)
+
 if __name__ == "__main__":
     app.run()
 
