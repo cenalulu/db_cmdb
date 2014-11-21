@@ -1,11 +1,12 @@
 {% extends "includes.html" %}
 {%
         set side_bar_tree = {
-            (0,'blank','DashBoard','fa-dashboard'): {},
-            (1,'index','CMDB','fa-bar-chart-o'): {
-                (0,'server_list', 'Machine List') :{},
-                (1,'instance_list', 'Instance List') :{},
-                (2,'mmm_list', 'MMM List') :{}
+            0:{ 'func_name':'blank','show_name':'DashBoard','icon':'fa-dashboard','next_level':{} },
+            1:{ 'func_name':'index','show_name':'CMDB','icon':'fa-bar-chart-o','next_level': {
+                0:{'func_name':'server_list', 'show_name':'Machine List', 'next_level':{}},
+                1:{'func_name':'instance_list', 'show_name':'Instance List', 'next_level':{}},
+                2:{'func_name':'mmm_list', 'show_name':'MMM List', 'next_level':{}}
+                }
             }
         }
         %}
@@ -125,25 +126,25 @@
                             </div>
                             <!-- /input-group -->
                         </li>
-                    {% for level1, level1_item in side_bar_tree.iteritems() %}
-                        {% if level1_item|length>1 %}
-                            {% if level1_name==level1[1] %}
+                    {% for idx1, level1 in side_bar_tree.iteritems() %}
+                        {% if level1.next_level|length > 1 %}
+                            {% if level1.func_name==level1.func_name %}
                                 <li class="active">
                             {% else %}
                                 <li>
                             {% endif %}
                             <a href="#" >
-                                <i class="fa {{ level1[3] }} fa-fw"></i> {{ level1[2] }}<span class="fa arrow"></span>
+                                <i class="fa {{ level1.icon }} fa-fw"></i> {{ level1.show_name }}<span class="fa arrow"></span>
                             </a>
                             <ul class="nav nav-second-level">
-                            {% for level2, level2_item in level1_item.iteritems() %}
+                            {% for idx2, level2 in level1.next_level.iteritems() %}
                                 <li>
-                                    {% if level2[1] == level2_name %}
-                                        <a href="{{  url_for(level2[1]) }}" class="active">
+                                    {% if level2.func_name == level2_name %}
+                                        <a href="{{  url_for(level2.func_name) }}" class="active">
                                     {% else %}
-                                        <a href="{{  url_for(level2[1]) }}">
+                                        <a href="{{  url_for(level2.func_name) }}">
                                     {% endif %}
-                                        {{ level2[2] }}
+                                        {{ level2.show_name }}
                                     </a>
                                 </li>
                             {% endfor %}
@@ -151,10 +152,10 @@
                             </li>
                         {% else %}
                             <li>
-                                {% if level1_name==level1[1] %}
-                                    <a href="{{  url_for(level1[1]) }}" class="active"><i class="fa {{ level1[3] }} fa-fw"></i>&nbsp;{{ level1[2] }}</a>
+                                {% if level1_name==level1.func_name %}
+                                    <a href="{{  url_for(level1.func_name) }}" class="active"><i class="fa {{ level1.icon }} fa-fw"></i>&nbsp;{{ level1.show_name }}</a>
                                 {% else %}
-                                    <a href="{{  url_for(level1[1]) }}"><i class="fa {{ level1[3] }} fa-fw"></i>&nbsp;{{ level1[2] }}</a>
+                                    <a href="{{  url_for(level1.func_name) }}"><i class="fa {{ level1.icon }} fa-fw"></i>&nbsp;{{ level1.show_name }}</a>
                                 {% endif %}
                             </li>
                         {% endif %}
