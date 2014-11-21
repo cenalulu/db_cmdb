@@ -3,9 +3,6 @@ from flask import Flask, render_template, request, url_for
 from cmdb.serverlist import ServerList
 from cmdb.instancelist import InstList
 from cmdb.server_info_form import ServerInfoForm
-import urllib2
-import urllib
-import json
 
 import sys
 reload(sys)
