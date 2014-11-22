@@ -21,15 +21,21 @@ def blank():
     return render_template('blank.html', data=data)
 
 
-@app.route("/serverinfotest")
-def server_info_test():
-    server_form = ServerInfoForm()
-    return render_template("serverinfotest.html", form=server_form)
-
-
 @app.route("/addserver/", methods=['GET', 'POST'])
 def add_server():
+    host_info = ServerList()
+    env = host_info.list_supported_env()
+    mirror = host_info.list_supported_mirror()
+    use_status = host_info.list_supported_use_status()
+    status = host_info.list_supported_status()
+    env = zip(env, env)
+    mirror = zip(mirror, mirror)
+
     server_form = ServerInfoForm()
+    server_form.env.choices = env
+    server_form.mirror.choices = mirror
+    server_form.server_status.choices = status
+    server_form.use_status.choices = use_status
     data = dict()
     if request.method == 'POST':
         server_post = request.form
@@ -44,8 +50,7 @@ def add_server():
             else:
                 page_data['add_result']['msg'] = "[Failed]: Unknown CMDB API error"
         else:
-            page_data['add_result']['status'] = 0
-            page_data['add_result']['msg'] = "[Success]: Add Server Succeed"
+            data['notification'] = [{'level': 'success', 'msg': 'Add Server Success!'}]
         data['form_data'] = server_post
     else:
         page_data = ''
@@ -56,22 +61,53 @@ def add_server():
     return render_template('addserver.html', data=data)
 
 
-@app.route("/serverinfo/<server_id>", methods=['GET', 'POST'])
+@app.route("/serverinfo/<server_id>")
 def server_info(server_id=None):
+    data = dict()
+    host_info = ServerList()
+    single_server_info = dict()
+
+    query_result = host_info.info_by_id(server_id)
+    if not query_result:
+        data['notification'] = [{'level': 'danger', 'msg': host_info.get_last_error()}]
+    else:
+        single_server_info = query_result[0]
+
+    data['page_data'] = single_server_info
+    data['page_data']['server_id'] = server_id
+    data['page_name'] = 'Server Info'
+    return render_template('serverinfo.html',data=data)
+
+
+@app.route("/serverinfoedit/<server_id>", methods=['GET', 'POST'])
+def server_info_edit(server_id=None):
+    host_info = ServerList()
     if request.method == 'POST':
         page_data = request.form
     else:
         if not server_id or server_id == 0:
             page_data = ''
         else:
-            host_info = ServerList()
             page_data = host_info.info_by_id(server_id)
+    env = host_info.list_supported_env()
+    mirror = host_info.list_supported_mirror()
+    use_status = host_info.list_supported_use_status()
+    status = host_info.list_supported_status()
+    env = zip(env, env)
+    mirror = zip(mirror, mirror)
+    status = zip(status, status)
+    use_status = zip(use_status, use_status)
+
     server_form = ServerInfoForm()
+    server_form.env.choices = env
+    server_form.mirror.choices = mirror
+    server_form.server_status.choices = status
+    server_form.use_status.choices = use_status
     data = dict()
     data['page_name'] = 'Server Info'
     data['form'] = server_form
     data['page_data'] = page_data
-    return render_template('serverinfo.html', data=data)
+    return render_template('serverinfoedit.html', data=data)
 
 
 @app.route('/servermodify', methods=['GET', 'POST'])
@@ -96,12 +132,14 @@ def instance_list():
 
 @app.route("/serverlist")
 def server_list():
-    conf_list = ServerList()
-    page_data = conf_list.list_all()
+    data = dict()
+    all_servers = ServerList()
+    page_data = all_servers.list_all()
+    if all_servers.is_last_call_error():
+        data['notification'] = [{'level': 'danger', 'msg': all_servers.get_last_error()}]
     message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
     task_list = ({'name': 'task 1', 'progress': 10},)
 
-    data = dict()
     data['message_list'] = message_list
     data['task_list'] = task_list
     data['page_name'] = 'Machine List'
@@ -132,5 +170,6 @@ def mmm_list():
     return render_template('mmmlist.html', data=data)
 
 if __name__ == "__main__":
-    app.run('0.0.0.0')
+    app.jinja_env.cache = None
+    app.run(host='0.0.0.0',port=5000)
 
