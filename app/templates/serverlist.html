@@ -12,9 +12,9 @@
                 </div>
                 <div class="panel-body">
                     <a type="button"
-                       class="btn btn-info"
+                       class="btn btn-primary"
                        href="{{ url_for('add_server') }}">
-                       Add Server
+                        Add Server
                     </a>
                 </div>
             </div>
@@ -22,14 +22,10 @@
     </div>
     <div class="row">
         <div class="col-lg-12">
-            <div class="panel panel-default">
+            <div class="panel panel-info">
                 <div class="panel-heading">
-                    Basic Tabs
-                </div>
-                <!-- /.panel-heading -->
-                <div class="panel-body">
                     <!-- Nav tabs -->
-                    <ul class="nav nav-tabs">
+                    <ul class="nav nav-pills">
                         <li class="active"><a href="#inuse" data-toggle="tab">Inuse</a>
                         </li>
                         <li><a href="#free" data-toggle="tab">Free</a>
@@ -37,11 +33,12 @@
                         <li><a href="#all" data-toggle="tab">All</a>
                         </li>
                     </ul>
-
+                </div>
+                <!-- /.panel-heading -->
+                <div class="panel-body">
                     <!-- Tab panes -->
                     <div class="tab-content">
                         <div class="tab-pane fade in active" id="inuse">
-                            <div class="well">
                             <div class="table-responsive">
                                 <table class="table" id="inuseserverlist">
                                     <thead>
@@ -109,7 +106,6 @@
                                     {% endif %}
                                     </tbody>
                                 </table>
-                            </div>
                             </div>
                         </div>
                         <div class="tab-pane fade" id="free">
