@@ -6,21 +6,21 @@ import json
 
 
 class ServerList:
-    api_addr = "http://192.168.222.156:5000/"
-    last_error =0
+    api_addr = ""
+    last_error = 0
     last_error_msg = ''
 
 
-    def __init__(self):
-        self.api_addr = "http://192.168.222.156:5000/"
+    def __init__(self, api_addr):
+        self.api_addr = api_addr
 
     def __call_interface__(self, module_name, interface_name, json_obj=None):
         try:
             if json_obj:
                 encoded_data = urllib.urlencode(json_obj)
-                fp = urllib2.urlopen(self.api_addr + module_name + '/' + interface_name,encoded_data, timeout=1)
+                fp = urllib2.urlopen(self.api_addr + '/' + module_name + '/' + interface_name, encoded_data, timeout=1)
             else:
-                fp = urllib2.urlopen(self.api_addr + module_name + '/' + interface_name, timeout=1)
+                fp = urllib2.urlopen(self.api_addr + '/' + module_name + '/' + interface_name, timeout=1)
 
             result = json.load(fp)
             if result['status'] == 0:

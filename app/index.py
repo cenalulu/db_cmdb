@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, url_for
 from cmdb.serverlist import ServerList
 from cmdb.instancelist import InstList
 from cmdb.server_info_form import ServerInfoForm
+from config import app_config
 
 import sys
 reload(sys)
@@ -23,7 +24,7 @@ def blank():
 
 @app.route("/addserver/", methods=['GET', 'POST'])
 def add_server():
-    host_info = ServerList()
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
     env = host_info.list_supported_env()
     mirror = host_info.list_supported_mirror()
     use_status = host_info.list_supported_use_status()
@@ -39,7 +40,7 @@ def add_server():
     data = dict()
     if request.method == 'POST':
         server_post = request.form
-        server = ServerList()
+        server = ServerList(app.config['CMDB_API_ADDR'])
         result = server.add_server(server_post)
         page_data = dict()
         page_data['add_result'] = dict()
@@ -64,7 +65,7 @@ def add_server():
 @app.route("/serverinfo/<server_id>")
 def server_info(server_id=None):
     data = dict()
-    host_info = ServerList()
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
     single_server_info = dict()
 
     query_result = host_info.info_by_id(server_id)
@@ -81,7 +82,7 @@ def server_info(server_id=None):
 
 @app.route("/serverinfoedit/<server_id>", methods=['GET', 'POST'])
 def server_info_edit(server_id=None):
-    host_info = ServerList()
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
     if request.method == 'POST':
         page_data = request.form
     else:
@@ -133,7 +134,7 @@ def instance_list():
 @app.route("/serverlist")
 def server_list():
     data = dict()
-    all_servers = ServerList()
+    all_servers = ServerList(app.config['CMDB_API_ADDR'])
     page_data = all_servers.list_all()
     if all_servers.is_last_call_error():
         data['notification'] = [{'level': 'danger', 'msg': all_servers.get_last_error()}]
@@ -171,5 +172,6 @@ def mmm_list():
 
 if __name__ == "__main__":
     app.jinja_env.cache = None
-    app.run(host='0.0.0.0',port=5000)
+    app.config.from_object(app_config)
+    app.run(host='0.0.0.0', port=app.config['PORT'])
 
