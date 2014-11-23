@@ -2,3 +2,4 @@
 sb-admin-2/
 env/
 config.py
+*.pyc
