@@ -149,14 +149,14 @@ def server_list():
 
 
 @app.route("/")
-def index():
+def dashboard():
     data = dict()
     message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
     task_list = ({'name': 'task 1', 'progress': 10},)
     data['message_list'] = message_list
     data['task_list'] = task_list
     data['page_name'] = 'Dash Board'
-    return render_template('frame.html', data=data)
+    return render_template('dashboard.html', data=data)
 
 
 @app.route("/mmmlist")

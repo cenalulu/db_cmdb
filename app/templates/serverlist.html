@@ -97,7 +97,7 @@
                                                     </td>
                                                     <td>
                                                         <a href="{{ url_for('server_info_edit', server_id = row['server_id']) }}" type="button" class="btn btn-primary btn-xs">
-                                                            Info
+                                                            Detail
                                                         </a>
                                                     </td>
                                                 </tr>
@@ -109,6 +109,68 @@
                             </div>
                         </div>
                         <div class="tab-pane fade" id="free">
+                            <div class="table-responsive">
+                                <table class="table" id="inuseserverlist">
+                                    <thead>
+                                    <tr>
+                                        <th>Serial NO.</th>
+                                        <th>IP</th>
+                                        <th>Host Name</th>
+                                        <th>System</th>
+                                        <th>Env</th>
+                                        <th>Owner</th>
+                                        <th>Operation</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {%  if data['page_data']  %}
+                                        {% for row in data['page_data'] %}
+                                            {% if row['server_status'] == '空闲' %}
+                                                <tr class="{{ loop.cycle('odd','even') }}">
+                                                    <td>
+                                                        {% if row["server_id"] %}
+                                                            <a href="{{ url_for('server_info_edit', server_id=row['server_id']) }}" type="button" class="btn btn-info btn-xs">
+                                                                {{ row['server_id'] }}
+                                                            </a>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if row["server_ip"] %}
+                                                            {{ row["server_ip"] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if row["server_name"] %}
+                                                            {{ row["server_name"] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if row["mirror"] %}
+                                                            {{ row["mirror"] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if row["env"] %}
+                                                            {{ row["env"] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if row["owner"] %}
+                                                            {{ row["owner"] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ url_for('server_info_edit', server_id = row['server_id']) }}" type="button" class="btn btn-primary btn-xs">
+                                                            Detail
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                         <div class="tab-pane fade" id="all">
                             <div class="table-responsive">
@@ -171,7 +233,7 @@
                                                     {% endif %}
                                                 </td>
                                                 <td>
-                                                    <button href="{{ url_for('server_info_edit', server_id = row['server_id']) }}" type="button" class="btn btn-primary btn-xs">Info</button>
+                                                    <button href="{{ url_for('server_info_edit', server_id = row['server_id']) }}" type="button" class="btn btn-primary btn-xs">Detail</button>
                                                 </td>
                                             </tr>
                                         {% endfor %}

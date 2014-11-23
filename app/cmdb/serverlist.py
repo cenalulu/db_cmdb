@@ -18,9 +18,10 @@ class ServerList:
         try:
             if json_obj:
                 encoded_data = urllib.urlencode(json_obj)
-                fp = urllib2.urlopen(self.api_addr + '/' + module_name + '/' + interface_name, encoded_data, timeout=1)
+                fp = urllib2.urlopen(self.api_addr + module_name + '/' + interface_name, encoded_data, timeout=1)
             else:
-                fp = urllib2.urlopen(self.api_addr + '/' + module_name + '/' + interface_name, timeout=1)
+                fp = urllib2.urlopen(self.api_addr + module_name + '/' + interface_name, timeout=1)
+                print fp
 
             result = json.load(fp)
             if result['status'] == 0:
