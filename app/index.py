@@ -1,5 +1,5 @@
 # coding: utf8
-from flask import Flask, render_template, request, url_for
+from flask import Flask, render_template, request, url_for, redirect, flash
 from cmdb.serverlist import ServerList
 from cmdb.instancelist import InstList
 from cmdb.server_info_form import ServerInfoForm
@@ -31,6 +31,8 @@ def add_server():
     status = host_info.list_supported_status()
     env = zip(env, env)
     mirror = zip(mirror, mirror)
+    status = zip(status, status)
+    use_status = zip(use_status, use_status)
 
     server_form = ServerInfoForm()
     server_form.env.choices = env
@@ -40,18 +42,15 @@ def add_server():
     data = dict()
     if request.method == 'POST':
         server_post = request.form
-        server = ServerList(app.config['CMDB_API_ADDR'])
-        result = server.add_server(server_post)
+        server_info = ServerList(app.config['CMDB_API_ADDR'])
+        result = server_info.add_server(server_post)
         page_data = dict()
         page_data['add_result'] = dict()
-        if result['status'] != 0:
-            page_data['add_result']['status'] = -1
-            if result.has_key('data'):
-                page_data['add_result']['msg'] = "[Failed]:" + result['data']
-            else:
-                page_data['add_result']['msg'] = "[Failed]: Unknown CMDB API error"
+        if not result:
+            flash(server_info.get_last_error(), 'danger')
         else:
-            data['notification'] = [{'level': 'success', 'msg': 'Add Server Success!'}]
+            flash('Add Server Success!', 'success')
+            return redirect(url_for('server_info', server_id=request.form['server_id']))
         data['form_data'] = server_post
     else:
         page_data = ''
@@ -62,6 +61,19 @@ def add_server():
     return render_template('addserver.html', data=data)
 
 
+@app.route("/deleteserver/<server_id>")
+def delete_server(server_id=None):
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
+
+    query_result = host_info.delete_by_id(server_id)
+    if not query_result:
+        flash(host_info.get_last_error(), 'danger')
+        return redirect(url_for('server_info', server_id=server_id))
+    else:
+        flash('Delete Server Success', 'success')
+        return redirect(url_for('server_list'))
+
+
 @app.route("/serverinfo/<server_id>")
 def server_info(server_id=None):
     data = dict()
@@ -70,26 +82,32 @@ def server_info(server_id=None):
 
     query_result = host_info.info_by_id(server_id)
     if not query_result:
-        data['notification'] = [{'level': 'danger', 'msg': host_info.get_last_error()}]
+        flash(host_info.get_last_error(), 'danger')
     else:
         single_server_info = query_result[0]
 
     data['page_data'] = single_server_info
     data['page_data']['server_id'] = server_id
     data['page_name'] = 'Server Info'
-    return render_template('serverinfo.html',data=data)
+    return render_template('serverinfo.html', data=data)
 
 
 @app.route("/serverinfoedit/<server_id>", methods=['GET', 'POST'])
 def server_info_edit(server_id=None):
+    data = dict()
     host_info = ServerList(app.config['CMDB_API_ADDR'])
     if request.method == 'POST':
         page_data = request.form
+        result = host_info.save_server_info(page_data)
+        if not result:
+            flash(host_info.get_last_error(), 'danger')
+        else:
+            flash('Edit Server Information Success', 'success')
     else:
         if not server_id or server_id == 0:
             page_data = ''
         else:
-            page_data = host_info.info_by_id(server_id)
+            page_data = host_info.info_by_id(server_id)[0]
     env = host_info.list_supported_env()
     mirror = host_info.list_supported_mirror()
     use_status = host_info.list_supported_use_status()
@@ -104,7 +122,6 @@ def server_info_edit(server_id=None):
     server_form.mirror.choices = mirror
     server_form.server_status.choices = status
     server_form.use_status.choices = use_status
-    data = dict()
     data['page_name'] = 'Server Info'
     data['form'] = server_form
     data['page_data'] = page_data
@@ -137,7 +154,7 @@ def server_list():
     all_servers = ServerList(app.config['CMDB_API_ADDR'])
     page_data = all_servers.list_all()
     if all_servers.is_last_call_error():
-        data['notification'] = [{'level': 'danger', 'msg': all_servers.get_last_error()}]
+        flash(all_servers.get_last_error(), 'danger')
     message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
     task_list = ({'name': 'task 1', 'progress': 10},)
 
