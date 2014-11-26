@@ -36,15 +36,17 @@ class ServerList:
                 self.last_error = result['status']
                 self.last_error_msg = msg % (module_name, interface_name, json_str, result['status'], result['data'])
                 return tuple()
-        except urllib2.URLError:
-            msg = 'Failed to call remote interface. Module: %s, Interface: %s, Query String: %s'
+        except urllib2.URLError, e:
             if not json_obj:
-                json_str = ''
+                msg = 'Failed to call remote interface. Module: %s, Interface: %s, Error Message: %s'
+                self.last_error = -1
+                self.last_error_msg = msg % (module_name, interface_name, e)
             else:
+                msg = 'Failed to call remote interface. Module: %s, Interface: %s, Query String: %s, Error Message: %s'
                 json_str = json.dumps(json_obj)
+                self.last_error = -1
+                self.last_error_msg = msg % (module_name, interface_name, json_str, e)
 
-            self.last_error = -1
-            self.last_error_msg = msg % (module_name, interface_name, json_str)
             return tuple()
 
     def is_last_call_error(self):
@@ -89,13 +91,30 @@ class ServerList:
         result = self.__call_interface__('CMDB', 'getenv')
         return result
 
+    def list_supported_dba(self):
+        query_obj = {"role": "DBA", "status": "在职"}
+        result = self.__call_interface__('USER', 'getuser', json_obj=query_obj)
+        dba_list = list()
+        if result:
+            for user in result:
+                dba_list.append(user['realname'])
+            return dba_list
+        else:
+            return False
+
     def list_supported_use_status(self):
         use_status_list = ['已用', '待用']
         return use_status_list
 
     def list_supported_status(self):
-        status_list = ['未初始化系統',  '系統初始化中', '系統已初始化', '上線前配置中', '在线' ,'DBA維護中', '服務器維護中', '下线']
-        return status_list
+        result = self.__call_interface__('CMDB', 'getserverstatus')
+        status_list = list()
+        if result:
+            for status in result:
+                status_list.append(status['status'])
+            return status_list
+        else:
+            return False
 
 if __name__ == '__main__':
     test_server = ServerList()

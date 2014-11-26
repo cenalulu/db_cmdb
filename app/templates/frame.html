@@ -7,7 +7,17 @@
                 1:{'func_name':'instance_list', 'show_name':'Instance List', 'next_level':{}},
                 2:{'func_name':'mmm_list', 'show_name':'MMM List', 'next_level':{}}
                 }
-            }
+            },
+            2:{ 'func_name':'backup','show_name':'Backup','icon':'fa-dashboard','next_level':{
+                0:{'func_name':'backup', 'show_name':'Backup Center', 'next_level':{}},
+                1:{'func_name':'recover', 'show_name':'Recover', 'next_level':{}},
+            } },
+            3:{ 'func_name':'monitor','show_name':'Monitor','icon':'fa-dashboard','next_level':{
+                0:{'func_name':'metrics', 'show_name':'Metrics', 'next_level':{}},
+                1:{'func_name':'slowlog', 'show_name':'Slow Log', 'next_level':{}},
+                2:{'func_name':'query_monitor', 'show_name':'Query Monitor', 'next_level':{}},
+            } },
+
         }
         %}
 {% block realbody %}

@@ -16,6 +16,31 @@ app.debug = True
 app.config['SECRET_KEY'] = 'cenalulu'
 
 
+@app.route("/backup")
+def backup():
+    data = dict({'page_name': 'Backup Center'})
+    return render_template('blank.html', data=data)
+
+@app.route("/recover")
+def recover():
+    data = dict({'page_name': 'Backup Center'})
+    return render_template('blank.html', data=data)
+
+@app.route("/metrics")
+def metrics():
+    data = dict({'page_name': 'Metrics'})
+    return render_template('blank.html', data=data)
+
+@app.route("/slowlog")
+def slowlog():
+    data = dict({'page_name': 'Slow Query'})
+    return render_template('blank.html', data=data)
+
+@app.route("/querymonitor")
+def query_monitor():
+    data = dict({'page_name': 'Query Monitor'})
+    return render_template('blank.html', data=data)
+
 @app.route("/blank")
 def blank():
     data = dict({'page_name': 'DashBoard'})
@@ -28,17 +53,24 @@ def add_server():
     env = host_info.list_supported_env()
     mirror = host_info.list_supported_mirror()
     use_status = host_info.list_supported_use_status()
-    status = host_info.list_supported_status()
+    owner = host_info.list_supported_dba()
     env = zip(env, env)
     mirror = zip(mirror, mirror)
-    status = zip(status, status)
     use_status = zip(use_status, use_status)
+    owner = zip(owner, owner)
+    status = host_info.list_supported_status()
+    if status:
+        status = zip(status, status)
+    else:
+        flash(host_info.get_last_error(), 'danger')
+        status = tuple()
 
     server_form = ServerInfoForm()
     server_form.env.choices = env
     server_form.mirror.choices = mirror
     server_form.server_status.choices = status
     server_form.use_status.choices = use_status
+    server_form.owner.choices = owner
     data = dict()
     if request.method == 'POST':
         server_post = request.form
@@ -152,16 +184,43 @@ def instance_list():
 def server_list():
     data = dict()
     all_servers = ServerList(app.config['CMDB_API_ADDR'])
-    page_data = all_servers.list_all()
+    env = all_servers.list_supported_env()
+    mirror = all_servers.list_supported_mirror()
+    use_status = all_servers.list_supported_use_status()
+    owner = all_servers.list_supported_dba()
+    env = zip(env, env)
+    mirror = zip(mirror, mirror)
+    use_status = zip(use_status, use_status)
+    owner = zip(owner, owner)
+    status = all_servers.list_supported_status()
+    if status:
+        status = zip(status, status)
+    else:
+        flash(all_servers.get_last_error(), 'danger')
+        status = tuple()
+    filter_form = ServerInfoForm()
+    filter_form.env.choices = env
+    filter_form.mirror.choices = mirror
+    filter_form.server_status.choices = status
+    filter_form.use_status.choices = use_status
+    filter_form.owner.choices = owner
+    supported_query_key = ['owner','mirror','server_status','env']
+    query_condition = dict()
+    for key in supported_query_key:
+        request_value = request.args.get(key, False)
+        if request_value:
+            query_condition[key] = request_value
+
+    page_data = all_servers.list_all(data=query_condition)
     if all_servers.is_last_call_error():
         flash(all_servers.get_last_error(), 'danger')
     message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
     task_list = ({'name': 'task 1', 'progress': 10},)
-
     data['message_list'] = message_list
     data['task_list'] = task_list
     data['page_name'] = 'Machine List'
     data['page_data'] = page_data
+    data['filter_form'] = filter_form
     return render_template('serverlist.html', data=data)
 
 

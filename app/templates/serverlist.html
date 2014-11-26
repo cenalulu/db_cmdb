@@ -1,4 +1,5 @@
 {% extends "frame.html" %}
+{% import "bootstrap_form.html" as btstrp %}
 {% set level1_name='cmdb' %}
 {% set level2_name='server_list' %}
 {% block page_wrapper %}
@@ -16,6 +17,27 @@
                        href="{{ url_for('add_server') }}">
                         Add Server
                     </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    Filter
+                </div>
+                <div class="panel-body">
+                    <form role="form" class="form-inline" action="{{ url_for('server_list') }}" method="GET">
+                        <div class="row">
+                            {%  set form = data['filter_form'] %}
+                                    {{ btstrp.render_field(form.owner, label_visible=true, value=form['owner']) }}
+                                    {{ btstrp.render_field(form.mirror, label_visible=true, value=form['mirror']) }}
+                                    {{ btstrp.render_field(form.env, label_visible=true, value=form['env']) }}
+                                    {{ btstrp.render_field(form.server_status, label_visible=true, value=form['server_status']) }}
+                                <button type="submit" class="btn btn-success">Apply</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -43,7 +65,7 @@
                                 <table class="table table-bordered table-hover" id="inuseserverlist">
                                     <thead>
                                         <tr>
-                                               <th>Serial NO.</th>
+                                               <th>#</th>
                                                <th>IP</th>
                                                <th>Host Name</th>
                                                <th>System</th>
@@ -60,7 +82,7 @@
                                                     <td>
                                                         {% if row["server_id"] %}
                                                             <a href="{{ url_for('server_info', server_id=row['server_id']) }}" type="button" class="btn btn-info btn-xs">
-                                                                {{ row['server_id'] }}
+                                                                {{ loop.index }}
                                                             </a>
                                                         {% endif %}
                                                     </td>
@@ -83,12 +105,16 @@
                                                     </td>
                                                     <td>
                                                         {% if row["server_status"] %}
-                                                            {{ row["server_status"] }}
+                                                            <a type="button" class="btn btn-info btn-xs">
+                                                                {{ row["server_status"] }}
+                                                            </a>
                                                         {% endif %}
                                                     </td>
                                                     <td>
                                                         {% if row["owner"] %}
-                                                            {{ row["owner"] }}
+                                                            <a type="button" class="btn btn-info btn-xs">
+                                                                {{ row["owner"] }}
+                                                            </a>
                                                         {% endif %}
                                                     </td>
                                                     <td>
@@ -109,7 +135,7 @@
                                 <table class="table table-bordered table-hover" id="freeserverlist">
                                     <thead>
                                     <tr>
-                                        <th>Serial NO.</th>
+                                        <th>#</th>
                                         <th>IP</th>
                                         <th>Host Name</th>
                                         <th>System</th>
@@ -125,7 +151,7 @@
                                                     <td>
                                                         {% if row["server_id"] %}
                                                             <a href="{{ url_for('server_info', server_id=row['server_id']) }}" type="button" class="btn btn-info btn-xs">
-                                                                {{ row['server_id'] }}
+                                                                {{ loop.index }}
                                                             </a>
                                                         {% endif %}
                                                     </td>
@@ -167,7 +193,7 @@
                                 <table class="table table-bordered table-hover" id="allserverlist">
                                     <thead>
                                     <tr>
-                                        <th>Serial NO.</th>
+                                        <th>#</th>
                                         <th>IP</th>
                                         <th>Host Name</th>
                                         <th>System</th>
@@ -184,7 +210,7 @@
                                                 <td>
                                                     {% if row["server_id"] %}
                                                         <a href="{{ url_for('server_info', server_id=row['server_id']) }}" type="button" class="btn btn-info btn-xs">
-                                                            {{ row['server_id'] }}
+                                                            {{ loop.index }}
                                                         </a>
                                                     {% endif %}
                                                 </td>
@@ -244,7 +270,7 @@
 $(document).ready(function() {
     $('#inuseserverlist').dataTable({
         'order':
-                [1, 'asc'],
+                [0, 'asc'],
         'columns': [
             {"orderable":false},
             {"orderable":true},
@@ -258,7 +284,7 @@ $(document).ready(function() {
     $('#freeserverlist').dataTable({});
     $('#allserverlist').dataTable({
         'order':
-                [1, 'asc'],
+                [0, 'asc'],
         'columns': [
             {"orderable":false},
             {"orderable":true},
