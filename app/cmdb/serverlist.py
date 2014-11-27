@@ -85,16 +85,31 @@ class ServerList:
 
     def list_supported_mirror(self):
         result = self.__call_interface__('CMDB', 'getmirror')
-        return result
+        mirror_list = list()
+        mirror_list.append('')
+        if result:
+            for mirror in result:
+                mirror_list.append(mirror)
+            return mirror_list
+        else:
+            return False
 
     def list_supported_env(self):
         result = self.__call_interface__('CMDB', 'getenv')
-        return result
+        env_list = list()
+        env_list.append('')
+        if result:
+            for env in result:
+                env_list.append(env)
+            return env_list
+        else:
+            return False
 
     def list_supported_dba(self):
         query_obj = {"role": "DBA", "status": "在职"}
         result = self.__call_interface__('USER', 'getuser', json_obj=query_obj)
         dba_list = list()
+        dba_list.append('')
         if result:
             for user in result:
                 dba_list.append(user['realname'])
@@ -103,12 +118,20 @@ class ServerList:
             return False
 
     def list_supported_use_status(self):
-        use_status_list = ['已用', '待用']
-        return use_status_list
+        result = self.__call_interface__('CMDB', 'getusestatus')
+        status_list = list()
+        status_list.append('')
+        if result:
+            for status in result:
+                status_list.append(status['status'])
+            return status_list
+        else:
+            return False
 
     def list_supported_status(self):
         result = self.__call_interface__('CMDB', 'getserverstatus')
         status_list = list()
+        status_list.append('')
         if result:
             for status in result:
                 status_list.append(status['status'])

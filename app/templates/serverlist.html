@@ -29,14 +29,13 @@
                 </div>
                 <div class="panel-body">
                     <form role="form" class="form-inline" action="{{ url_for('server_list') }}" method="GET">
-                        <div class="row">
-                            {%  set form = data['filter_form'] %}
-                                    {{ btstrp.render_field(form.owner, label_visible=true, value=form['owner']) }}
-                                    {{ btstrp.render_field(form.mirror, label_visible=true, value=form['mirror']) }}
-                                    {{ btstrp.render_field(form.env, label_visible=true, value=form['env']) }}
-                                    {{ btstrp.render_field(form.server_status, label_visible=true, value=form['server_status']) }}
-                                <button type="submit" class="btn btn-success">Apply</button>
-                        </div>
+                        {%  set form = data['filter_form'] %}
+                        {{ btstrp.render_field(form.owner, label_visible=true, value=form['owner']) }}
+                        {{ btstrp.render_field(form.mirror, label_visible=true, value=form['mirror']) }}
+                        {{ btstrp.render_field(form.env, label_visible=true, value=form['env']) }}
+                        {{ btstrp.render_field(form.server_status, label_visible=true, value=form['server_status']) }}
+                        <button type="submit" class="btn btn-success">Apply</button>
+                        <button type="reset" class="btn btn-success">Reset</button>
                     </form>
                 </div>
             </div>
@@ -47,22 +46,14 @@
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <!-- Nav tabs -->
-                    <ul class="nav nav-pills">
-                        <li class="active"><a href="#inuse" data-toggle="tab">Inuse</a>
-                        </li>
-                        <li><a href="#free" data-toggle="tab">Free</a>
-                        </li>
-                        <li><a href="#all" data-toggle="tab">All</a>
-                        </li>
-                    </ul>
+                    Server List
                 </div>
                 <!-- /.panel-heading -->
                 <div class="panel-body">
                     <!-- Tab panes -->
-                    <div class="tab-content">
                         <div class="tab-pane fade in active" id="inuse">
                             <div class="table-responsive">
-                                <table class="table table-bordered table-hover" id="inuseserverlist">
+                                <table class="table table-bordered table-hover" id="serverlist">
                                     <thead>
                                         <tr>
                                                <th>#</th>
@@ -130,133 +121,6 @@
                                 </table>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="free">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover" id="freeserverlist">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>IP</th>
-                                        <th>Host Name</th>
-                                        <th>System</th>
-                                        <th>Owner</th>
-                                        <th>Operation</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {%  if data['page_data']  %}
-                                        {% for row in data['page_data'] %}
-                                            {% if row['server_status'] == '空闲' %}
-                                                <tr class="{{ loop.cycle('odd','even') }}">
-                                                    <td>
-                                                        {% if row["server_id"] %}
-                                                            <a href="{{ url_for('server_info', server_id=row['server_id']) }}" type="button" class="btn btn-info btn-xs">
-                                                                {{ loop.index }}
-                                                            </a>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% if row["server_ip"] %}
-                                                            {{ row["server_ip"] }}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% if row["server_name"] %}
-                                                            {{ row["server_name"] }}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% if row["mirror"] %}
-                                                            {{ row["mirror"] }}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% if row["owner"] %}
-                                                            {{ row["owner"] }}
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        <a href="{{ url_for('server_info', server_id = row['server_id']) }}" type="button" class="btn btn-primary btn-xs">
-                                                            Detail
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endif %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="all">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-hover" id="allserverlist">
-                                    <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>IP</th>
-                                        <th>Host Name</th>
-                                        <th>System</th>
-                                        <th>Status</th>
-                                        <th>Use Status</th>
-                                        <th>Owner</th>
-                                        <th>Operation</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    {%  if data['page_data']  %}
-                                        {% for row in data['page_data'] %}
-                                            <tr class="odd gradeX">
-                                                <td>
-                                                    {% if row["server_id"] %}
-                                                        <a href="{{ url_for('server_info', server_id=row['server_id']) }}" type="button" class="btn btn-info btn-xs">
-                                                            {{ loop.index }}
-                                                        </a>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if row["server_ip"] %}
-                                                        {{ row["server_ip"] }}
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if row["server_name"] %}
-                                                        {{ row["server_name"] }}
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if row["mirror"] %}
-                                                        <a type="button" class="btn btn-info btn-xs">
-                                                            {{ row['mirror'] }}
-                                                        </a>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if row["use_status"] %}
-                                                        {{ row["use_status"] }}
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if row["server_status"] %}
-                                                        {{ row["server_status"] }}
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    {% if row["owner"] %}
-                                                        {{ row["owner"] }}
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    <a href="{{ url_for('server_info', server_id = row['server_id']) }}" type="button" class="btn btn-info btn-xs">Detail</a>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    {% endif %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -268,7 +132,7 @@
 {{ super() }}
 <script>
 $(document).ready(function() {
-    $('#inuseserverlist').dataTable({
+    $('#serverlist').dataTable({
         'order':
                 [0, 'asc'],
         'columns': [
@@ -281,22 +145,6 @@ $(document).ready(function() {
             {"orderable":false}
         ]
     });
-    $('#freeserverlist').dataTable({});
-    $('#allserverlist').dataTable({
-        'order':
-                [0, 'asc'],
-        'columns': [
-            {"orderable":false},
-            {"orderable":true},
-            {"orderable":false},
-            {"orderable":false},
-            {"orderable":true},
-            {"orderable":false},
-            {"orderable":false},
-            {"orderable":false}
-        ]
-    });
-    $('#dataTables-example').dataTable();
 });
 </script>
 {% endblock %}

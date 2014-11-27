@@ -6,10 +6,9 @@ from cmdb.server_info_form import ServerInfoForm
 from config import app_config
 
 import sys
+
 reload(sys)
 sys.setdefaultencoding('utf8')
-
-
 
 app = Flask(__name__)
 app.debug = True
@@ -21,25 +20,30 @@ def backup():
     data = dict({'page_name': 'Backup Center'})
     return render_template('blank.html', data=data)
 
+
 @app.route("/recover")
 def recover():
     data = dict({'page_name': 'Backup Center'})
     return render_template('blank.html', data=data)
+
 
 @app.route("/metrics")
 def metrics():
     data = dict({'page_name': 'Metrics'})
     return render_template('blank.html', data=data)
 
+
 @app.route("/slowlog")
 def slowlog():
     data = dict({'page_name': 'Slow Query'})
     return render_template('blank.html', data=data)
 
+
 @app.route("/querymonitor")
 def query_monitor():
     data = dict({'page_name': 'Query Monitor'})
     return render_template('blank.html', data=data)
+
 
 @app.route("/blank")
 def blank():
@@ -124,6 +128,38 @@ def server_info(server_id=None):
     return render_template('serverinfo.html', data=data)
 
 
+def fill_server_info_form(server_form=None, env='', mirror='', server_status='', use_status='', owner=''):
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
+
+    env_list = host_info.list_supported_env()
+    mirror_list = host_info.list_supported_mirror()
+    use_status_list = host_info.list_supported_use_status()
+    server_status_list = host_info.list_supported_status()
+    owner_list = host_info.list_supported_dba()
+    env_list = zip(env_list, env_list)
+    mirror_list = zip(mirror_list, mirror_list)
+    server_status_list = zip(server_status_list, server_status_list)
+    use_status_list = zip(use_status_list, use_status_list)
+    owner_list = zip(owner_list, owner_list)
+    server_form.env.choices = env_list
+    server_form.mirror.choices = mirror_list
+    server_form.server_status.choices = server_status_list
+    server_form.use_status.choices = use_status_list
+    server_form.owner.choices = owner_list
+
+    if not env: env = ''
+    if not mirror: mirror = ''
+    if not owner: owner = ''
+    if not server_status: server_status = ''
+    if not use_status: use_status = ''
+    server_form.env.data = env
+    server_form.mirror.data = mirror
+    server_form.owner.data = owner
+    server_form.server_status.data = server_status
+    server_form.use_status.data = use_status
+    return server_form
+
+
 @app.route("/serverinfoedit/<server_id>", methods=['GET', 'POST'])
 def server_info_edit(server_id=None):
     data = dict()
@@ -140,20 +176,11 @@ def server_info_edit(server_id=None):
             page_data = ''
         else:
             page_data = host_info.info_by_id(server_id)[0]
-    env = host_info.list_supported_env()
-    mirror = host_info.list_supported_mirror()
-    use_status = host_info.list_supported_use_status()
-    status = host_info.list_supported_status()
-    env = zip(env, env)
-    mirror = zip(mirror, mirror)
-    status = zip(status, status)
-    use_status = zip(use_status, use_status)
 
     server_form = ServerInfoForm()
-    server_form.env.choices = env
-    server_form.mirror.choices = mirror
-    server_form.server_status.choices = status
-    server_form.use_status.choices = use_status
+    supported_select_key = ['owner', 'mirror', 'server_status', 'env']
+    fill_select_data = {key: page_data[key] for key in supported_select_key}
+    server_form = fill_server_info_form(server_form=server_form, **fill_select_data)
     data['page_name'] = 'Server Info'
     data['form'] = server_form
     data['page_data'] = page_data
@@ -183,29 +210,9 @@ def instance_list():
 @app.route("/serverlist")
 def server_list():
     data = dict()
-    all_servers = ServerList(app.config['CMDB_API_ADDR'])
-    env = all_servers.list_supported_env()
-    mirror = all_servers.list_supported_mirror()
-    use_status = all_servers.list_supported_use_status()
-    owner = all_servers.list_supported_dba()
-    env = zip(env, env)
-    mirror = zip(mirror, mirror)
-    use_status = zip(use_status, use_status)
-    owner = zip(owner, owner)
-    status = all_servers.list_supported_status()
-    if status:
-        status = zip(status, status)
-    else:
-        flash(all_servers.get_last_error(), 'danger')
-        status = tuple()
-    filter_form = ServerInfoForm()
-    filter_form.env.choices = env
-    filter_form.mirror.choices = mirror
-    filter_form.server_status.choices = status
-    filter_form.use_status.choices = use_status
-    filter_form.owner.choices = owner
-    supported_query_key = ['owner','mirror','server_status','env']
+    supported_query_key = ['owner', 'mirror', 'server_status', 'env']
     query_condition = dict()
+    all_servers = ServerList(app.config['CMDB_API_ADDR'])
     for key in supported_query_key:
         request_value = request.args.get(key, False)
         if request_value:
@@ -214,6 +221,10 @@ def server_list():
     page_data = all_servers.list_all(data=query_condition)
     if all_servers.is_last_call_error():
         flash(all_servers.get_last_error(), 'danger')
+
+    filter_form = ServerInfoForm()
+    filter_form = fill_server_info_form(server_form=filter_form, **query_condition)
+
     message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
     task_list = ({'name': 'task 1', 'progress': 10},)
     data['message_list'] = message_list
@@ -245,6 +256,7 @@ def mmm_list():
     data['task_list'] = task_list
     data['page_name'] = 'ToDo'
     return render_template('mmmlist.html', data=data)
+
 
 if __name__ == "__main__":
     app.jinja_env.cache = None
