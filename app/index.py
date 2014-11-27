@@ -179,7 +179,9 @@ def server_info_edit(server_id=None):
 
     server_form = ServerInfoForm()
     supported_select_key = ['owner', 'mirror', 'server_status', 'env']
-    fill_select_data = {key: page_data[key] for key in supported_select_key}
+    fill_select_data = dict()
+    for key in supported_select_key:
+        fill_select_data[key] = page_data[key]
     server_form = fill_server_info_form(server_form=server_form, **fill_select_data)
     data['page_name'] = 'Server Info'
     data['form'] = server_form
