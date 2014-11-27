@@ -17,6 +17,8 @@
                        href="{{ url_for('add_server') }}">
                         Add Server
                     </a>
+                    <a class="btn btn-primary" href="{{ url_for('server_list') }}">All Servers</a>
+                    <a class="btn btn-primary" href="{{ url_for('server_list', use_status='空闲') }}">Free Servers</a>
                 </div>
             </div>
         </div>
@@ -34,8 +36,8 @@
                         {{ btstrp.render_field(form.mirror, label_visible=true, value=form['mirror']) }}
                         {{ btstrp.render_field(form.env, label_visible=true, value=form['env']) }}
                         {{ btstrp.render_field(form.server_status, label_visible=true, value=form['server_status']) }}
-                        <button type="submit" class="btn btn-success">Apply</button>
-                        <button type="reset" class="btn btn-success">Reset</button>
+                        <button type="submit" class="btn btn-primary">Apply</button>
+                        <a class="btn btn-primary" href="{{ url_for('server_list') }}">Reset</a>
                     </form>
                 </div>
             </div>
@@ -56,27 +58,20 @@
                                 <table class="table table-bordered table-hover" id="serverlist">
                                     <thead>
                                         <tr>
-                                               <th>#</th>
                                                <th>IP</th>
                                                <th>Host Name</th>
                                                <th>System</th>
-                                               <th>Status</th>
+                                               <th>Env</th>
+                                                <th>Status</th>
                                                <th>Owner</th>
-                                               <th>Operation</th>
+                                               <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                     {%  if data['page_data']  %}
-                                        {% for row in data['page_data'] %}
-                                            {% if row['server_status'] == '在线' %}
-                                                <tr class="{{ loop.cycle('odd','even') }}">
-                                                    <td>
-                                                        {% if row["server_id"] %}
-                                                            <a href="{{ url_for('server_info', server_id=row['server_id']) }}" type="button" class="btn btn-info btn-xs">
-                                                                {{ loop.index }}
-                                                            </a>
-                                                        {% endif %}
-                                                    </td>
+                                        {% set table_data = data['page_data']|sort(attribute='server_ip') %}
+                                        {% for row in table_data %}
+                                                <tr >
                                                     <td>
                                                         {% if row["server_ip"] %}
                                                             {{ row["server_ip"] }}
@@ -84,7 +79,9 @@
                                                     </td>
                                                     <td>
                                                         {% if row["server_name"] %}
-                                                            {{ row["server_name"] }}
+                                                            <a type="button" class="btn btn-info btn-xs">
+                                                                {{ row["server_name"] }}
+                                                            </a>
                                                         {% endif %}
                                                     </td>
                                                     <td>
@@ -95,7 +92,22 @@
                                                         {% endif %}
                                                     </td>
                                                     <td>
-                                                        {% if row["server_status"] %}
+                                                        {% if row["env"] %}
+                                                            <a type="button" class="btn btn-info btn-xs">
+                                                                {{ row['env'] }}
+                                                            </a>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if row["server_status"] and row["server_status"]=="在线" %}
+                                                            <a type="button" class="btn btn-success btn-xs">
+                                                                {{ row["server_status"] }}
+                                                            </a>
+                                                        {% elif row["server_status"]=="下线" %}
+                                                            <a type="button" class="btn btn-default btn-xs">
+                                                                {{ row["server_status"] }}
+                                                            </a>
+                                                        {% else %}
                                                             <a type="button" class="btn btn-info btn-xs">
                                                                 {{ row["server_status"] }}
                                                             </a>
@@ -114,7 +126,6 @@
                                                         </a>
                                                     </td>
                                                 </tr>
-                                            {% endif %}
                                         {% endfor %}
                                     {% endif %}
                                     </tbody>
@@ -133,11 +144,9 @@
 <script>
 $(document).ready(function() {
     $('#serverlist').dataTable({
-        'order':
-                [0, 'asc'],
         'columns': [
-            {"orderable":false},
-            {"orderable":true},
+            {"orderable":true, "searchable":true},
+            {"orderable":false, "searchable":true},
             {"orderable":false},
             {"orderable":false},
             {"orderable":true},

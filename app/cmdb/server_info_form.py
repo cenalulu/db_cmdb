@@ -4,6 +4,12 @@ import wtforms
 from serverlist import ServerList
 
 
+class ServerInitForm(Form):
+    server_id = wtforms.StringField('SerialNO', validators=[])
+    server_ip = wtforms.StringField('Server IP', validators=[wtforms.validators.IPAddress()])
+    mirror = wtforms.SelectField('Mirror', validators=[], choices=[])
+    comment = wtforms.TextAreaField('Memo', validators=[])
+
 class ServerInfoForm(Form):
     server_id = wtforms.StringField('SerialNO', validators=[])
     server_ip = wtforms.StringField('Server IP', validators=[wtforms.validators.IPAddress()])

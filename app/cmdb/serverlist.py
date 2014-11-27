@@ -75,6 +75,12 @@ class ServerList:
         result = self.__call_interface__('CMDB', 'getserverinfo', json_obj=data)
         return result
 
+    def init_system_with_mirror(self, info):
+        info['template_id'] = 1
+        info['flow_name'] = '数据库服务器系统初始化'
+        result = self.__call_interface__('TEMPLATE', 'add_flow', json_obj=info)
+        return result
+
     def save_server_info(self, info):
         result = self.__call_interface__('CMDB', 'serverstatechange/0', json_obj=info)
         return result

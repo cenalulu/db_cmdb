@@ -10,7 +10,7 @@
                 </div>
                 <div class="panel-body">
                     <a type="button"
-                       class="btn btn-primary"
+                       class="btn btn-default"
                        href="{{ url_for('server_list') }}">
                        Back</a>
                     <a type="button"
@@ -20,6 +20,8 @@
                     <a type="button" class="btn btn-warning"  methods="POST">Maintenance</a>
                     <a type="button" class="btn btn-warning"  methods="POST">Repair Request</a>
                     <a type="button" class="btn btn-danger"  methods="POST">Offline</a>
+                    <a type="button" class="btn btn-danger"
+                            href="{{ url_for('init_system', server_id=data['page_data']['server_id']) }}">Init System</a>
                     <a type="button"
                        class="btn btn-danger"
                        href="{{ url_for('delete_server', server_id=data['page_data']['server_id']) }}"

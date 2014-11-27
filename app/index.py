@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, url_for, redirect, flash
 from cmdb.serverlist import ServerList
 from cmdb.instancelist import InstList
-from cmdb.server_info_form import ServerInfoForm
+from cmdb.server_info_form import ServerInfoForm, ServerInitForm
 from config import app_config
 
 import sys
@@ -128,6 +128,17 @@ def server_info(server_id=None):
     return render_template('serverinfo.html', data=data)
 
 
+def fill_init_server_form(server_form=None, mirror=''):
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
+
+    mirror_list = host_info.list_supported_mirror()
+    mirror_list = zip(mirror_list, mirror_list)
+    server_form.mirror.choices = mirror_list
+
+    if not mirror: mirror = ''
+    server_form.mirror.data = mirror
+    return server_form
+
 def fill_server_info_form(server_form=None, env='', mirror='', server_status='', use_status='', owner=''):
     host_info = ServerList(app.config['CMDB_API_ADDR'])
 
@@ -159,6 +170,36 @@ def fill_server_info_form(server_form=None, env='', mirror='', server_status='',
     server_form.use_status.data = use_status
     return server_form
 
+
+@app.route("/initsystem/<server_id>", methods=['GET', 'POST'])
+def init_system(server_id=None):
+    data = dict()
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
+    if request.method == 'POST':
+        request_dict = dict()
+        request_dict['server_id'] = request.form.get('server_id')
+        request_dict['ip'] = request.form.get('server_ip')
+        request_dict['mirror'] = request.form.get('mirror')
+        request_dict['comment'] = request.form.get('comment')
+        result = host_info.init_system_with_mirror(request_dict)
+        if not result:
+            flash(host_info.get_last_error(), 'danger')
+        else:
+            flash('System initial request sent', 'success')
+    else:
+        if not server_id or server_id == 0:
+            page_data = ''
+
+    page_data = host_info.info_by_id(server_id)[0]
+    server_form = ServerInitForm()
+    if request.form.get('mirror', False):
+        server_form = fill_init_server_form(server_form, request.form.get('mirror', ''))
+    else:
+        server_form = fill_init_server_form(server_form, mirror=page_data['mirror'])
+    data['page_name'] = 'Server Info'
+    data['form'] = server_form
+    data['page_data'] = page_data
+    return render_template('init_system.html', data=data)
 
 @app.route("/serverinfoedit/<server_id>", methods=['GET', 'POST'])
 def server_info_edit(server_id=None):
@@ -212,7 +253,7 @@ def instance_list():
 @app.route("/serverlist")
 def server_list():
     data = dict()
-    supported_query_key = ['owner', 'mirror', 'server_status', 'env']
+    supported_query_key = ['owner', 'mirror', 'server_status', 'env', 'use_status']
     query_condition = dict()
     all_servers = ServerList(app.config['CMDB_API_ADDR'])
     for key in supported_query_key:
