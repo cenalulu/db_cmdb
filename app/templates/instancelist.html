@@ -39,9 +39,9 @@
                                     <th>IP</th>
                                     <th>Port</th>
                                     <th>Type</th>
-                                    <th>Status</th>
                                     <th>Biz Owner</th>
                                     <th>DBA Owner</th>
+                                    <th>Status</th>
                                     <th>Detail</th>
                                 </tr>
                                 </thead>
@@ -72,6 +72,20 @@
                                                 {% endif %}
                                             </td>
                                             <td>
+                                                {% if row["jon_owner"] %}
+                                                    <a type="button" class="btn btn-default btn-xs">
+                                                        {{ row["jon_owner"] }}
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if row["dba_owner"] %}
+                                                    <a type="button" class="btn btn-default btn-xs">
+                                                        {{ row["dba_owner"] }}
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                            <td>
                                                 {% if row["status"] and row["status"]=="在线" %}
                                                     <a type="button" class="btn btn-success btn-xs">
                                                         {{ row["status"] }}
@@ -87,25 +101,8 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                {% if row["jon_owner"] %}
-                                                    <a type="button" class="btn btn-default btn-xs">
-                                                        {{ row["jon_owner"] }}
-                                                    </a>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if row["dba_owner"] %}
-                                                    <a type="button" class="btn btn-default btn-xs">
-                                                        {{ row["dba_owner"] }}
-                                                    </a>
-                                                {% endif %}
-                                            </td>
-                                            <td>
                                                 <a href="{{ url_for('instance_info', id = row['id']) }}" type="button" class="btn btn-primary btn-xs">
-                                                    Instance
-                                                </a>
-                                                <a href="{{ url_for('server_info', server_id = row['server_id']) }}" type="button" class="btn btn-primary btn-xs">
-                                                    Server
+                                                    Detail
                                                 </a>
                                             </td>
                                         </tr>
