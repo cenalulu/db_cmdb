@@ -42,8 +42,8 @@
                                                <th>Host Name</th>
                                                <th>System</th>
                                                <th>Env</th>
-                                                <th>Status</th>
                                                <th>Owner</th>
+                                               <th>Status</th>
                                                <th>Action</th>
                                         </tr>
                                     </thead>
@@ -81,6 +81,13 @@
                                                         {% endif %}
                                                     </td>
                                                     <td>
+                                                        {% if row["owner"] %}
+                                                            <a type="button" class="btn btn-default btn-xs">
+                                                                {{ row["owner"] }}
+                                                            </a>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
                                                         {% if row["server_status"] and row["server_status"]=="在线" %}
                                                             <a type="button" class="btn btn-success btn-xs">
                                                                 {{ row["server_status"] }}
@@ -92,13 +99,6 @@
                                                         {% else %}
                                                             <a type="button" class="btn btn-default btn-xs">
                                                                 {{ row["server_status"] }}
-                                                            </a>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% if row["owner"] %}
-                                                            <a type="button" class="btn btn-default btn-xs">
-                                                                {{ row["owner"] }}
                                                             </a>
                                                         {% endif %}
                                                     </td>
