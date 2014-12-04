@@ -20,6 +20,15 @@ class ServerInfoForm(Form):
     env = wtforms.SelectField('Env', validators=[], choices=[])
     owner = wtforms.SelectField('Owner', validators=[], choices=[])
 
+class InstanceInfoForm(Form):
+    server_id = wtforms.StringField('SerialNO', validators=[])
+    server_ip = wtforms.StringField('Server IP', validators=[wtforms.validators.IPAddress()])
+    port = wtforms.StringField('Instance Port', validators=[])
+    status = wtforms.SelectField('Status', validators=[], choices=[])
+    type = wtforms.SelectField('Type', validators=[], choices=[])
+    dba_owner = wtforms.SelectField('DBA Owner', validators=[], choices=[])
+    biz_owner = wtforms.StringField('Biz Owner', validators=[])
+
 
 if __name__ == '__main__':
     test = ServerInfoForm()

@@ -15,6 +15,10 @@ class ServerList:
         self.api_addr = api_addr
 
     def __call_interface__(self, module_name, interface_name, json_obj=None):
+        """
+
+        :rtype : dict
+        """
         try:
             if json_obj:
                 query_obj = {"data": json.dumps(json_obj)}
@@ -65,9 +69,30 @@ class ServerList:
         result = self.__call_interface__('CMDB', 'getserverinfo', json_obj=data)
         return result
 
+    def online_by_id(self, server_id):
+        data = {
+            "server_id": server_id,
+            "server_status": "在线"
+        }
+        result = self.__call_interface__('CMDB', 'serverstatechange/0', json_obj=data)
+        return result
+
+    def offline_by_id(self, server_id):
+        data = {
+            "server_id": server_id,
+            "server_status": "下线"
+        }
+        result = self.__call_interface__('CMDB', 'serverstatechange/0', json_obj=data)
+        return result
+
     def delete_by_id(self, server_id):
         data = {"server_id": server_id}
         result = self.__call_interface__('CMDB', 'deleteserver', json_obj=data)
+        return result
+
+    def machine_info_by_id(self, server_id):
+        data = {"server_id": server_id}
+        result = self.__call_interface__('CMDB', 'getengineinfo', json_obj=data)
         return result
 
     def info_by_id(self, server_id):
@@ -75,10 +100,13 @@ class ServerList:
         result = self.__call_interface__('CMDB', 'getserverinfo', json_obj=data)
         return result
 
+    def get_ip_by_id(self, server_id=None):
+        data = {"server_id": server_id}
+        result = self.__call_interface__('CMDB', 'getserverinfo', json_obj=data)
+        return result[0]['server_ip']
+
     def init_system_with_mirror(self, info):
-        info['template_id'] = 1
-        info['flow_name'] = '数据库服务器系统初始化'
-        result = self.__call_interface__('TEMPLATE', 'add_flow', json_obj=info)
+        result = self.__call_interface__('CMDB', 'init_system', json_obj=info)
         return result
 
     def save_server_info(self, info):

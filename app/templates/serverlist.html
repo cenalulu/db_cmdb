@@ -28,7 +28,7 @@
                     <a class="btn btn-info" href="{{ url_for('server_list') }}">All Servers</a>
                     <a class="btn btn-info" href="{{ url_for('server_list', use_status='空闲') }}">Free Servers</a>
                     <a class="btn btn-info" href="{{ url_for('server_list', env='production') }}">Production Servers</a>
-                    <a class="btn btn-info" href="{{ url_for('server_list', status='在线') }}">Online Servers</a>
+                    <a class="btn btn-info" href="{{ url_for('server_list', server_status='在线') }}">Online Servers</a>
                 </div>
                 <!-- /.panel-heading -->
                 <div class="panel-body">
@@ -54,7 +54,9 @@
                                                 <tr >
                                                     <td>
                                                         {% if row["server_ip"] %}
-                                                            {{ row["server_ip"] }}
+                                                            <a href="{{ url_for('server_info', server_id = row['server_id']) }}" type="button" class="btn btn-info btn-xs">
+                                                                {{ row["server_ip"] }}
+                                                            </a>
                                                         {% endif %}
                                                     </td>
                                                     <td>

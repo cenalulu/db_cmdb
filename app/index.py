@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, url_for, redirect, flash
 from cmdb.serverlist import ServerList
 from cmdb.instancelist import InstList
-from cmdb.server_info_form import ServerInfoForm, ServerInitForm
+from cmdb.server_info_form import ServerInfoForm, ServerInitForm, InstanceInfoForm
 from config import app_config
 
 import sys
@@ -15,119 +15,9 @@ app.debug = True
 app.config['SECRET_KEY'] = 'cenalulu'
 
 
-@app.route("/backup")
-def backup():
-    data = dict({'page_name': 'Backup Center'})
-    return render_template('blank.html', data=data)
-
-
-@app.route("/recover")
-def recover():
-    data = dict({'page_name': 'Backup Center'})
-    return render_template('blank.html', data=data)
-
-
-@app.route("/metrics")
-def metrics():
-    data = dict({'page_name': 'Metrics'})
-    return render_template('blank.html', data=data)
-
-
-@app.route("/slowlog")
-def slowlog():
-    data = dict({'page_name': 'Slow Query'})
-    return render_template('blank.html', data=data)
-
-
-@app.route("/querymonitor")
-def query_monitor():
-    data = dict({'page_name': 'Query Monitor'})
-    return render_template('blank.html', data=data)
-
-
-@app.route("/blank")
-def blank():
-    data = dict({'page_name': 'DashBoard'})
-    return render_template('blank.html', data=data)
-
-
-@app.route("/addserver/", methods=['GET', 'POST'])
-def add_server():
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
-    env = host_info.list_supported_env()
-    mirror = host_info.list_supported_mirror()
-    use_status = host_info.list_supported_use_status()
-    owner = host_info.list_supported_dba()
-    env = zip(env, env)
-    mirror = zip(mirror, mirror)
-    use_status = zip(use_status, use_status)
-    owner = zip(owner, owner)
-    status = host_info.list_supported_status()
-    if status:
-        status = zip(status, status)
-    else:
-        flash(host_info.get_last_error(), 'danger')
-        status = tuple()
-
-    server_form = ServerInfoForm()
-    server_form.env.choices = env
-    server_form.mirror.choices = mirror
-    server_form.server_status.choices = status
-    server_form.use_status.choices = use_status
-    server_form.owner.choices = owner
-    data = dict()
-    if request.method == 'POST':
-        server_post = request.form
-        server_info = ServerList(app.config['CMDB_API_ADDR'])
-        result = server_info.add_server(server_post)
-        page_data = dict()
-        page_data['add_result'] = dict()
-        if not result:
-            flash(server_info.get_last_error(), 'danger')
-        else:
-            flash('Add Server Success!', 'success')
-            return redirect(url_for('server_info', server_id=request.form['server_id']))
-        data['form_data'] = server_post
-    else:
-        page_data = ''
-        data['form_data'] = dict()
-    data['page_name'] = 'Add Server'
-    data['form'] = server_form
-    data['page_data'] = page_data
-    return render_template('addserver.html', data=data)
-
-
-@app.route("/deleteserver/<server_id>")
-def delete_server(server_id=None):
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
-
-    query_result = host_info.delete_by_id(server_id)
-    if not query_result:
-        flash(host_info.get_last_error(), 'danger')
-        return redirect(url_for('server_info', server_id=server_id))
-    else:
-        flash('Delete Server Success', 'success')
-        return redirect(url_for('server_list'))
-
-
-@app.route("/serverinfo/<server_id>")
-def server_info(server_id=None):
-    data = dict()
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
-    single_server_info = dict()
-
-    query_result = host_info.info_by_id(server_id)
-    if not query_result:
-        flash(host_info.get_last_error(), 'danger')
-    else:
-        single_server_info = query_result[0]
-
-    data['page_data'] = single_server_info
-    data['page_data']['server_id'] = server_id
-    data['page_name'] = 'Server Info'
-    return render_template('serverinfo.html', data=data)
-
-
+###################################
+#form function part
+###################################
 def fill_init_server_form(server_form=None, mirror=''):
     host_info = ServerList(app.config['CMDB_API_ADDR'])
 
@@ -170,6 +60,90 @@ def fill_server_info_form(server_form=None, env='', mirror='', server_status='',
     server_form.use_status.data = use_status
     return server_form
 
+def fill_inst_info_form(server_form=None, type='', status='', dba_owner=''):
+    host_info = InstList(app.config['CMDB_API_ADDR'])
+
+    type_list = host_info.list_supported_type()
+    status_list = host_info.list_supported_status()
+    dba_owner_list = host_info.list_supported_dba()
+    server_form.type.choices = type_list
+    server_form.status.choices = status_list
+    server_form.dba_owner.choices = dba_owner_list
+
+    if not type: type = ''
+    if not status: status = ''
+    if not dba_owner: dba_owner = ''
+    server_form.type.data = type
+    server_form.status.data = status
+    server_form.dba_owner.data = dba_owner
+    return server_form
+
+
+
+###################################
+#server function part
+###################################
+
+@app.route("/online/<server_id>")
+def online_system(server_id=None):
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
+
+    query_result = host_info.online_by_id(server_id)
+    if not query_result:
+        flash(host_info.get_last_error(), 'danger')
+        return redirect(url_for('server_info', server_id=server_id))
+    else:
+        flash('Online Server Success', 'success')
+        return redirect(url_for('server_info', server_id=server_id))
+
+@app.route("/offlineserver/<server_id>")
+def offline_server(server_id=None):
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
+
+    query_result = host_info.offline_by_id(server_id)
+    if not query_result:
+        flash(host_info.get_last_error(), 'danger')
+        return redirect(url_for('server_info', server_id=server_id))
+    else:
+        flash('Offline Server Success', 'success')
+        return redirect(url_for('server_info', server_id=server_id))
+
+@app.route("/deleteserver/<server_id>")
+def delete_server(server_id=None):
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
+
+    query_result = host_info.delete_by_id(server_id)
+    if not query_result:
+        flash(host_info.get_last_error(), 'danger')
+        return redirect(url_for('server_info', server_id=server_id))
+    else:
+        flash('Delete Server Success', 'success')
+        return redirect(url_for('server_list'))
+
+@app.route("/serverinfo/<server_id>")
+def server_info(server_id=None):
+    data = dict({'page_data': dict()})
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
+
+    single_server_info = dict()
+    query_result = host_info.info_by_id(server_id)
+    if not query_result:
+        flash(host_info.get_last_error(), 'danger')
+    else:
+        single_server_info = query_result[0]
+    data['page_data']['server_info'] = single_server_info
+    data['page_data']['server_info']['server_id'] = server_id
+
+    machine_info = dict()
+    query_result = host_info.machine_info_by_id(server_id)
+    if not query_result:
+        flash(host_info.get_last_error(), 'danger')
+    else:
+        machine_info = query_result[0]
+    data['page_data']['machine_info'] = machine_info
+
+    data['page_name'] = 'Server Info'
+    return render_template('serverinfo.html', data=data)
 
 @app.route("/initsystem/<server_id>", methods=['GET', 'POST'])
 def init_system(server_id=None):
@@ -178,7 +152,7 @@ def init_system(server_id=None):
     if request.method == 'POST':
         request_dict = dict()
         request_dict['server_id'] = request.form.get('server_id')
-        request_dict['ip'] = request.form.get('server_ip')
+        request_dict['server_ip'] = request.form.get('server_ip')
         request_dict['mirror'] = request.form.get('mirror')
         request_dict['comment'] = request.form.get('comment')
         result = host_info.init_system_with_mirror(request_dict)
@@ -229,26 +203,9 @@ def server_info_edit(server_id=None):
     data['page_data'] = page_data
     return render_template('serverinfoedit.html', data=data)
 
-
 @app.route('/servermodify', methods=['GET', 'POST'])
 def servermodify():
     return render_template('servermodify.html')
-
-
-@app.route("/instancelist/")
-def instance_list():
-    inst_list = InstList()
-    page_data = inst_list.list_all()
-    message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
-    task_list = ({'name': 'task 1', 'progress': 10},)
-    data = dict()
-    data['message_list'] = message_list
-    data['task_list'] = task_list
-    data['page_name'] = 'Instance List'
-    data['page_data'] = page_data
-
-    return render_template('instancelist.html', data=data)
-
 
 @app.route("/serverlist")
 def server_list():
@@ -277,18 +234,154 @@ def server_list():
     data['filter_form'] = filter_form
     return render_template('serverlist.html', data=data)
 
+@app.route("/addserver/", methods=['GET', 'POST'])
+def add_server():
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
+    env = host_info.list_supported_env()
+    mirror = host_info.list_supported_mirror()
+    use_status = host_info.list_supported_use_status()
+    owner = host_info.list_supported_dba()
+    env = zip(env, env)
+    mirror = zip(mirror, mirror)
+    use_status = zip(use_status, use_status)
+    owner = zip(owner, owner)
+    status = host_info.list_supported_status()
+    if status:
+        status = zip(status, status)
+    else:
+        flash(host_info.get_last_error(), 'danger')
+        status = tuple()
 
-@app.route("/")
-def dashboard():
+    server_form = ServerInfoForm()
+    server_form.env.choices = env
+    server_form.mirror.choices = mirror
+    server_form.server_status.choices = status
+    server_form.use_status.choices = use_status
+    server_form.owner.choices = owner
     data = dict()
-    message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
-    task_list = ({'name': 'task 1', 'progress': 10},)
-    data['message_list'] = message_list
-    data['task_list'] = task_list
-    data['page_name'] = 'Dash Board'
-    return render_template('dashboard.html', data=data)
+    if request.method == 'POST':
+        server_post = request.form
+        server_info = ServerList(app.config['CMDB_API_ADDR'])
+        result = server_info.add_server(server_post)
+        page_data = dict()
+        page_data['add_result'] = dict()
+        if not result:
+            flash(server_info.get_last_error(), 'danger')
+        else:
+            flash('Add Server Success!', 'success')
+            return redirect(url_for('server_info', server_id=request.form['server_id']))
+        data['form_data'] = server_post
+    else:
+        page_data = ''
+        data['form_data'] = dict()
+    data['page_name'] = 'Add Server'
+    data['form'] = server_form
+    data['page_data'] = page_data
+    return render_template('addserver.html', data=data)
 
+###################################
+#instance function part
+###################################
 
+@app.route("/instancelist/")
+def instance_list():
+    data = dict({'page_data': dict()})
+    supported_query_key = ['dba_owner', 'type', 'status']
+    query_condition = dict()
+    all_insts = InstList(app.config['CMDB_API_ADDR'])
+    for key in supported_query_key:
+        request_value = request.args.get(key, False)
+        if request_value:
+            query_condition[key] = request_value
+
+    page_data = all_insts.list_all(data=query_condition)
+    if all_insts.is_last_call_error():
+        flash(all_insts.get_last_error(), 'danger')
+
+    filter_form = InstanceInfoForm()
+    filter_form = fill_inst_info_form(server_form=filter_form, **query_condition)
+
+    data['page_name'] = 'Instance List'
+    data['page_data']['inst_info'] = page_data
+    data['filter_form'] = filter_form
+    return render_template('instancelist.html', data=data)
+
+@app.route("/instanceinfo/<id>")
+def instance_info(id=None):
+    data = dict({'page_data': dict()})
+    host_info = ServerList(app.config['CMDB_API_ADDR'])
+    instance = InstList(app.config['CMDB_API_ADDR'])
+
+    single_instance_info = dict()
+    query_result = instance.info_by_id(id)
+    if not query_result:
+        flash(host_info.get_last_error(), 'danger')
+    else:
+        single_instance_info = query_result[0]
+    data['page_data']['instance_info'] = single_instance_info
+
+    server_id = single_instance_info['server_id']
+    single_server_info = dict()
+    query_result = host_info.info_by_id(server_id)
+    if not query_result:
+        flash(host_info.get_last_error(), 'danger')
+    else:
+        single_server_info = query_result[0]
+    data['page_data']['server_info'] = single_server_info
+    data['page_data']['server_info']['server_id'] = server_id
+
+    machine_info = dict()
+    query_result = host_info.machine_info_by_id(server_id)
+    if not query_result:
+        flash(host_info.get_last_error(), 'danger')
+    else:
+        machine_info = query_result[0]
+    data['page_data']['machine_info'] = machine_info
+
+    data['page_name'] = 'Server Info'
+    return render_template('instanceinfo.html', data=data)
+
+@app.route("/addinstance/", methods=['GET', 'POST'])
+def add_instance():
+    host_info = InstList(app.config['CMDB_API_ADDR'])
+    type_list = host_info.list_supported_type()
+    status_list = host_info.list_supported_status()
+    dba_owner_list = host_info.list_supported_dba()
+
+    server_form = InstanceInfoForm()
+    server_form.type.choices = type_list
+    server_form.status.choices = status_list
+    server_form.dba_owner.choices = dba_owner_list
+
+    data = dict({'page_data': {}, 'form_data': {}})
+    if request.method == 'POST':
+        server_post = request.form
+        server_info = InstList(app.config['CMDB_API_ADDR'])
+        result = server_info.add_instance(server_post)
+        page_data = dict()
+        page_data['add_result'] = dict()
+        if not result:
+            flash(server_info.get_last_error(), 'danger')
+        else:
+            flash('Add Server Success!', 'success')
+            return redirect(url_for('instance_info', server_id=request.form['server_id']))
+        data['form_data'] = server_post
+    elif request.method == 'GET':
+        server_id = request.args.get('server_id')
+        host_info = ServerList(app.config['CMDB_API_ADDR'])
+        server_ip = host_info.get_ip_by_id(server_id)
+        data['form_data']['server_id'] = server_id
+        data['form_data']['server_ip'] = server_ip
+        page_data = ''
+    else:
+        page_data = ''
+    data['page_name'] = 'Add Server'
+    data['form'] = server_form
+    data['page_data'] = page_data
+    return render_template('addinstance.html', data=data)
+###################################
+#instance function part
+###################################
 @app.route("/mmmlist")
 def mmm_list():
     message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
@@ -299,6 +392,53 @@ def mmm_list():
     data['task_list'] = task_list
     data['page_name'] = 'ToDo'
     return render_template('mmmlist.html', data=data)
+
+@app.route("/backup")
+def backup():
+    data = dict({'page_name': 'Backup Center'})
+    return render_template('blank.html', data=data)
+
+
+@app.route("/recover")
+def recover():
+    data = dict({'page_name': 'Backup Center'})
+    return render_template('blank.html', data=data)
+
+
+@app.route("/metrics")
+def metrics():
+    data = dict({'page_name': 'Metrics'})
+    return render_template('blank.html', data=data)
+
+
+@app.route("/slowlog")
+def slowlog():
+    data = dict({'page_name': 'Slow Query'})
+    return render_template('blank.html', data=data)
+
+
+@app.route("/querymonitor")
+def query_monitor():
+    data = dict({'page_name': 'Query Monitor'})
+    return render_template('blank.html', data=data)
+
+
+@app.route("/blank")
+def blank():
+    data = dict({'page_name': 'DashBoard'})
+    return render_template('blank.html', data=data)
+
+
+
+@app.route("/")
+def dashboard():
+    data = dict()
+    message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
+    task_list = ({'name': 'task 1', 'progress': 10},)
+    data['message_list'] = message_list
+    data['task_list'] = task_list
+    data['page_name'] = 'Dash Board'
+    return render_template('dashboard.html', data=data)
 
 
 if __name__ == "__main__":

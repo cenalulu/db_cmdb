@@ -15,17 +15,119 @@
                        Back</a>
                     <a type="button"
                        class="btn btn-primary"
-                       href="{{ url_for('server_info_edit', server_id=data['page_data']['server_id']) }}"
+                       href="{{ url_for('server_info_edit', server_id=data['page_data']['server_info']['server_id']) }}"
                        methods="POST">Edit</a>
+                    <a type="button"
+                       class="btn btn-primary"
+                       href="{{ url_for('add_instance'
+                           , server_id=data['page_data']['server_info']['server_id']
+                           ) }}"
+                       methods="GET">Add Instance</a>
+                    <!-- Modal -->
+                    <button class="btn btn-success" data-toggle="modal" data-target="#myInitModal">
+                        Init System
+                    </button>
+                    <div class="modal fade" id="myInitModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title" id="myModalLabel">Confirmation</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure to rebuild system for server: {{ data['page_data']['server_info']['server_id'] }}?
+                                </div>
+                                <div class="modal-footer">
+                                    <a type="button" class="btn btn-success"
+                                       href="{{ url_for('init_system', server_id=data['page_data']['server_info']['server_id']) }}">
+                                        Init System
+                                    </a>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                            <!-- /.modal-content -->
+                        </div>
+                        <!-- /.modal-dialog -->
+                    </div>
+                    <button class="btn btn-success" data-toggle="modal" data-target="#myOnlineModal">
+                        Online
+                    </button>
+                    <div class="modal fade" id="myOnlineModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title" id="myModalLabel">Confirmation</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure to turn this server: {{ data['page_data']['server_info']['server_id'] }} into **Online** state?
+                                </div>
+                                <div class="modal-footer">
+                                    <a type="button" class="btn btn-success"
+                                       href="{{ url_for('online_system', server_id=data['page_data']['server_info']['server_id']) }}">
+                                        Online
+                                    </a>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                            <!-- /.modal-content -->
+                        </div>
+                        <!-- /.modal-dialog -->
+                    </div>
                     <a type="button" class="btn btn-warning"  methods="POST">Maintenance</a>
                     <a type="button" class="btn btn-warning"  methods="POST">Repair Request</a>
-                    <a type="button" class="btn btn-danger"  methods="POST">Offline</a>
-                    <a type="button" class="btn btn-danger"
-                            href="{{ url_for('init_system', server_id=data['page_data']['server_id']) }}">Init System</a>
-                    <a type="button"
-                       class="btn btn-danger"
-                       href="{{ url_for('delete_server', server_id=data['page_data']['server_id']) }}"
-                       methods="POST">Delete</a>
+                    <button class="btn btn-danger" data-toggle="modal" data-target="#myOfflineModal">
+                        Offline
+                    </button>
+                    <!-- Modal -->
+                    <div class="modal fade" id="myOfflineModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title" id="myModalLabel">Confirmation</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure to offline server: {{ data['page_data']['server_info']['server_id'] }} ?
+                                </div>
+                                <div class="modal-footer">
+                                    <a type="button" class="btn btn-danger"
+                                       href="{{ url_for('offline_server', server_id=data['page_data']['server_info']['server_id']) }}">
+                                        Offline
+                                    </a>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                            <!-- /.modal-content -->
+                        </div>
+                        <!-- /.modal-dialog -->
+                    </div>
+                    <!-- Modal -->
+                    <button class="btn btn-danger" data-toggle="modal" data-target="#myDeleteModal">
+                        Delete
+                    </button>
+                    <div class="modal fade" id="myDeleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title" id="myModalLabel">Confirmation</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure to delete this server {{ data['page_data']['server_info']['server_id'] }} ?
+                                </div>
+                                <div class="modal-footer">
+                                    <a type="button"
+                                       class="btn btn-danger"
+                                       href="{{ url_for('delete_server', server_id=data['page_data']['server_info']['server_id']) }}"
+                                       methods="POST">Delete</a>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                            <!-- /.modal-content -->
+                        </div>
+                        <!-- /.modal-dialog -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -34,11 +136,11 @@
         <div class="col-lg-6">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    Server Info for: {{ data['page_data']['server_id'] }}
+                    Server Info for: {{ data['page_data']['server_info']['server_id'] }}
                 </div>
                 <div class="panel-body">
                      <dl class="dl-horizontal">
-                         {% for key, value in data['page_data'].iteritems() %}
+                         {% for key, value in data['page_data']['server_info'].iteritems() %}
                                 <dt>{{ key }}</dt>
                                 <dd>{{ value }}</dd>
                          {% endfor %}
@@ -49,9 +151,15 @@
         <div class="col-lg-6">
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    Instance List on Server: {{ data['page_data']['server_id'] }}
+                    Machine Info For Server: {{ data['page_data']['server_info']['server_id'] }}
                 </div>
                 <div class="panel-body">
+                    <dl class="dl-horizontal">
+                    {% for key, value in data['page_data']['machine_info'].iteritems() %}
+                        <dt>{{ key }}</dt>
+                        <dd>{{ value }}</dd>
+                    {% endfor %}
+                    </dl>
                 </div>
             </div>
         </div>
