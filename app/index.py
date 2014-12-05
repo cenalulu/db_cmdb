@@ -338,7 +338,7 @@ def instance_info(id=None):
         machine_info = query_result[0]
     data['page_data']['machine_info'] = machine_info
 
-    data['page_name'] = 'Server Info'
+    data['page_name'] = 'Instance Info'
     return render_template('instanceinfo.html', data=data)
 
 @app.route("/addinstance/", methods=['GET', 'POST'])
@@ -364,7 +364,7 @@ def add_instance():
             flash(server_info.get_last_error(), 'danger')
         else:
             flash('Add Server Success!', 'success')
-            return redirect(url_for('instance_info', server_id=request.form['server_id']))
+            return redirect(url_for('instance_list'))
         data['form_data'] = server_post
     elif request.method == 'GET':
         server_id = request.args.get('server_id')
@@ -382,6 +382,17 @@ def add_instance():
 ###################################
 #instance function part
 ###################################
+@app.route("/schemalist")
+def schema_list():
+    message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
+    task_list = ({'name': 'task 1', 'progress': 10},)
+
+    data = dict()
+    data['message_list'] = message_list
+    data['task_list'] = task_list
+    data['page_name'] = 'ToDo'
+    return render_template('schemalist.html', data=data)
+
 @app.route("/mmmlist")
 def mmm_list():
     message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
@@ -438,6 +449,11 @@ def dashboard():
     data['message_list'] = message_list
     data['task_list'] = task_list
     data['page_name'] = 'Dash Board'
+    servers = ServerList(app.config['CMDB_API_ADDR'])
+    instances = InstList(app.config['CMDB_API_ADDR'])
+    data['page_data'] = dict()
+    data['page_data']['server_cnt'] = servers.get_total_cnt()
+    data['page_data']['instance_cnt'] = instances.get_total_cnt()
     return render_template('dashboard.html', data=data)
 
 

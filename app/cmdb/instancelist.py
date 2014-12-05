@@ -104,5 +104,9 @@ class InstList:
         return result
 
     def add_instance(self, info):
-        result = self.__call_interface__('CMDB', 'addinstane', json_obj=info)
+        result = self.__call_interface__('CMDB', 'addinstance', json_obj=info)
+        return result
+
+    def get_total_cnt(self):
+        result = self.__call_interface__('CMDB', 'getinstancecount')
         return result

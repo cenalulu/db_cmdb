@@ -24,7 +24,11 @@
                            ) }}"
                        methods="GET">Add Instance</a>
                     <!-- Modal -->
-                    <button class="btn btn-success" data-toggle="modal" data-target="#myInitModal">
+                    <button class="btn btn-success" data-toggle="modal" data-target="#myInitModal"
+                            {% if not data['page_data']['server_info']['server_status'] in  ['下线','未服务','未初始化'] %}
+                            disabled
+                            {% endif %}
+                    >
                         Init System
                     </button>
                     <div class="modal fade" id="myInitModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -39,7 +43,8 @@
                                 </div>
                                 <div class="modal-footer">
                                     <a type="button" class="btn btn-success"
-                                       href="{{ url_for('init_system', server_id=data['page_data']['server_info']['server_id']) }}">
+                                       href="{{ url_for('init_system', server_id=data['page_data']['server_info']['server_id']) }}"
+                                    >
                                         Init System
                                     </a>
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -133,7 +138,23 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-lg-6">
+    <div class="col-lg-6"><div class="row">
+        <div class="col-lg-12">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    Server Info for: {{ data['page_data']['server_info']['server_id'] }}
+                </div>
+                <div class="panel-body">
+                    <dl class="dl-horizontal">
+                        {% for key, value in data['page_data']['server_info'].iteritems() %}
+                            <dt>{{ key }}</dt>
+                            <dd>{{ value }}</dd>
+                        {% endfor %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12">
             <div class="panel panel-info">
                 <div class="panel-heading">
                     Server Info for: {{ data['page_data']['server_info']['server_id'] }}
@@ -148,20 +169,24 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">
+    </div></div>
+    <div class="col-lg-6"><div class="row">
+        <div class="col-lg-12">
             <div class="panel panel-info">
                 <div class="panel-heading">
                     Machine Info For Server: {{ data['page_data']['server_info']['server_id'] }}
                 </div>
                 <div class="panel-body">
                     <dl class="dl-horizontal">
-                    {% for key, value in data['page_data']['machine_info'].iteritems() %}
-                        <dt>{{ key }}</dt>
-                        <dd>{{ value }}</dd>
-                    {% endfor %}
+                        {% for key, value in data['page_data']['machine_info'].iteritems() %}
+                            <dt>{{ key }}</dt>
+                            <dd>{{ value }}</dd>
+                        {% endfor %}
                     </dl>
                 </div>
             </div>
         </div>
+    </div></div>
+
     </div>
 {% endblock %}

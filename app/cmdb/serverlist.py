@@ -113,6 +113,10 @@ class ServerList:
         result = self.__call_interface__('CMDB', 'serverstatechange/0', json_obj=info)
         return result
 
+    def get_total_cnt(self):
+        result = self.__call_interface__('CMDB', 'getservercount')
+        return result
+
     def add_server(self, info):
         result = self.__call_interface__('CMDB', 'addserver', json_obj=info)
         return result
