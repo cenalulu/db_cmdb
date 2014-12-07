@@ -1,7 +1,6 @@
 # coding: utf-8
 
-import urllib2
-import urllib
+import requests as requests
 import json
 
 
@@ -34,26 +33,24 @@ class CmdbApiBase:
         """
         try:
             param_json_str = ''
-            if json_obj:
-                param_json_str = json.dumps(json_obj)
-                query_obj = {"data": json.dumps(json_obj)}
+            param_json_str = json.dumps(json_obj)
+            query_obj = {"data": json.dumps(json_obj)}
+            fp = requests.get(self.__api_addr + module_name + '/' + interface_name, params=query_obj, timeout=1)
+            if fp.status_code == requests.codes.ok:
+                result = fp.json()
+                if not result:
+                    raise CmdbApiCallException(error_no=0, msg="Result from remote api is not a valid json str",
+                                               module=module_name, interface=interface_name, param=param_json_str)
+                if result['status'] == 0:
+                    return result['data']
+                else:
+                    raise CmdbApiCallException(error_no=result['status'], msg=result['data'],
+                                               module=module_name, interface=interface_name, param=param_json_str)
             else:
-                query_obj = {"data": {}}
-            encoded_data = urllib.urlencode(query_obj)
-            fp = urllib2.urlopen(self.__api_addr + module_name + '/' + interface_name, encoded_data, timeout=1)
-
-            result = json.load(fp)
-            if not result:
-                raise CmdbApiCallException(error_no=0, msg="Result from remote api is not a valid json str",
-                                           module=module_name, interface=interface_name, param=param_json_str)
-
-            if result['status'] == 0:
-                return result['data']
-            else:
-                raise CmdbApiCallException(error_no=result['status'], msg=result['data'],
-                                           module=module_name, interface=interface_name, param=param_json_str)
-        except urllib2.URLError, e:
-            raise CmdbApiCallException(error_no=e.errno, msg=e.args[0],
-                                       module=module_name, interface=interface_name, param=e.args[0])
+                fp.raise_for_status()
+        except Exception, e:
+            raise e
+            #raise CmdbApiCallException(error_no=e.errno, msg=e.args[0],
+                                       # module=module_name, interface=interface_name, param=e.args[0])
 
 

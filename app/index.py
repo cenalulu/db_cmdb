@@ -1,4 +1,5 @@
 # coding: utf8
+import requests
 from flask import Flask, render_template, request, url_for, redirect, flash
 from cmdb.serverlist import ServerList
 from cmdb.instancelist import InstList
@@ -89,9 +90,11 @@ def online_system(server_id=None):
         flash('Online Server Success', 'success')
     except CmdbApiCallException, e:
         flash(e.detail_msg(), 'danger')
+        return render_template('blank.html')
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
+        return render_template('blank.html')
     finally:
         return redirect(url_for('server_info', server_id=server_id))
 
@@ -104,9 +107,11 @@ def offline_server(server_id=None):
         flash('Offline Server Success', 'success')
     except CmdbApiCallException, e:
         flash(e.detail_msg(), 'danger')
+        return render_template('blank.html')
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
+        return render_template('blank.html')
     finally:
         return redirect(url_for('server_info', server_id=server_id))
 
@@ -120,10 +125,12 @@ def delete_server(server_id=None):
         return redirect(url_for('server_list'))
     except CmdbApiCallException, e:
         flash(e.detail_msg(), 'danger')
+        return render_template('blank.html')
         return redirect(url_for('server_info', server_id=server_id))
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
+        return render_template('blank.html')
         return redirect(url_for('server_info', server_id=server_id))
 
 @app.route("/serverinfo/<server_id>")
@@ -150,7 +157,7 @@ def server_info(server_id=None):
         flash(e.detail_msg(), 'danger')
         return render_template('blank.html')
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % type(e).__name__, e.message
         flash(msg, 'danger')
         return render_template('blank.html')
 
@@ -183,9 +190,11 @@ def init_system(server_id=None):
         return render_template('init_system.html', data=data)
     except CmdbApiCallException, e:
         flash(e.detail_msg(), 'danger')
+        return render_template('blank.html')
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
+        return render_template('blank.html')
 
 @app.route("/serverinfoedit/<server_id>", methods=['GET', 'POST'])
 def server_info_edit(server_id=None):
@@ -214,9 +223,11 @@ def server_info_edit(server_id=None):
         return render_template('serverinfoedit.html', data=data)
     except CmdbApiCallException, e:
         flash(e.detail_msg(), 'danger')
+        return render_template('blank.html')
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
+        return render_template('blank.html')
 
 @app.route('/servermodify', methods=['GET', 'POST'])
 def servermodify():
@@ -251,7 +262,7 @@ def server_list():
         flash(e.detail_msg(), 'danger')
         return render_template('blank.html')
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
         return render_template('blank.html')
 
@@ -292,7 +303,7 @@ def add_server():
         flash(e.detail_msg(), 'danger')
         return render_template('blank.html')
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
         return render_template('blank.html')
 ###################################
@@ -322,9 +333,11 @@ def instance_list():
         return render_template('instancelist.html', data=data)
     except CmdbApiCallException, e:
         flash(e.detail_msg(), 'danger')
+        return render_template('blank.html')
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
+        return render_template('blank.html')
 
 @app.route("/instanceinfo/<id>")
 def instance_info(id=None):
@@ -354,9 +367,11 @@ def instance_info(id=None):
         return render_template('instanceinfo.html', data=data)
     except CmdbApiCallException, e:
         flash(e.detail_msg(), 'danger')
+        return render_template('blank.html')
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
+        return render_template('blank.html')
 
 @app.route("/addinstance/", methods=['GET', 'POST'])
 def add_instance():
@@ -396,9 +411,11 @@ def add_instance():
         return render_template('addinstance.html', data=data)
     except CmdbApiCallException, e:
         flash(e.detail_msg(), 'danger')
+        return render_template('blank.html')
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
+        return render_template('blank.html')
 ###################################
 #instance function part
 ###################################
@@ -477,11 +494,13 @@ def dashboard():
         data['page_data']['instance_cnt'] = instances.get_total_cnt()
         return render_template('dashboard.html', data=data)
 
-    except CmdbApiCallException, e:
-        flash(e.detail_msg(), 'danger')
+    except (CmdbApiCallException, requests.ConnectionError), e:
+        flash(e.message, 'danger')
+        return render_template('dashboard.html', data=data)
     except Exception, e:
-        msg = "Unknown Error: %s" % e.message
+        msg = "%s: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
+        return render_template('blank.html')
 
 if __name__ == "__main__":
     app.jinja_env.cache = None
