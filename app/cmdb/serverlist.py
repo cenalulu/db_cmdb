@@ -3,67 +3,9 @@ __author__ = 'cenalulu'
 import urllib2
 import urllib
 import json
+from cmdb_api_base import CmdbApiBase
 
-
-class ServerList:
-    api_addr = ""
-    last_error = 0
-    last_error_msg = ''
-
-
-    def __init__(self, api_addr):
-        self.api_addr = api_addr
-
-    def __call_interface__(self, module_name, interface_name, json_obj=None):
-        """
-
-        :rtype : dict
-        """
-        try:
-            if json_obj:
-                query_obj = {"data": json.dumps(json_obj)}
-            else:
-                query_obj = {"data": {}}
-            encoded_data = urllib.urlencode(query_obj)
-            fp = urllib2.urlopen(self.api_addr + module_name + '/' + interface_name, encoded_data, timeout=1)
-
-            result = json.load(fp)
-            if result['status'] == 0:
-                return result['data']
-            else:
-                msg = 'Call remote interface return error. Module: %s, Interface: %s' \
-                      ', Query String:%s, Error Code: %d, Error Message: %s'
-                if not json_obj:
-                    json_str = ''
-                else:
-                    json_str = json.dumps(json_obj)
-                self.last_error = result['status']
-                self.last_error_msg = msg % (module_name, interface_name, json_str, result['status'], result['data'])
-                return tuple()
-        except urllib2.URLError, e:
-            if not json_obj:
-                msg = 'Failed to call remote interface. Module: %s, Interface: %s, Error Message: %s'
-                self.last_error = -1
-                self.last_error_msg = msg % (module_name, interface_name, e)
-            else:
-                msg = 'Failed to call remote interface. Module: %s, Interface: %s, Query String: %s, Error Message: %s'
-                json_str = json.dumps(json_obj)
-                self.last_error = -1
-                self.last_error_msg = msg % (module_name, interface_name, json_str, e)
-
-            return tuple()
-
-    def is_last_call_error(self):
-        if self.last_error == 0:
-            return False
-        else:
-            return True
-
-    def get_last_error(self):
-        last_error_msg = self.last_error_msg
-        self.last_error = 0
-        self.last_error_msg = ''
-        return last_error_msg
+class ServerList(CmdbApiBase):
 
     def list_all(self, data=None):
         result = self.__call_interface__('CMDB', 'getserverinfo', json_obj=data)
@@ -128,7 +70,7 @@ class ServerList:
         if result:
             for mirror in result:
                 mirror_list.append(mirror)
-            return mirror_list
+            return zip(mirror_list, mirror_list)
         else:
             return False
 
@@ -139,7 +81,7 @@ class ServerList:
         if result:
             for env in result:
                 env_list.append(env)
-            return env_list
+            return zip(env_list,env_list)
         else:
             return False
 
@@ -151,7 +93,7 @@ class ServerList:
         if result:
             for user in result:
                 dba_list.append(user['realname'])
-            return dba_list
+            return zip(dba_list, dba_list)
         else:
             return False
 
@@ -162,7 +104,7 @@ class ServerList:
         if result:
             for status in result:
                 status_list.append(status['status'])
-            return status_list
+            return zip(status_list, status_list)
         else:
             return False
 
@@ -173,7 +115,7 @@ class ServerList:
         if result:
             for status in result:
                 status_list.append(status['status'])
-            return status_list
+            return zip(status_list, status_list)
         else:
             return False
 

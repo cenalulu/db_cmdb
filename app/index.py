@@ -4,6 +4,7 @@ from cmdb.serverlist import ServerList
 from cmdb.instancelist import InstList
 from cmdb.server_info_form import ServerInfoForm, ServerInitForm, InstanceInfoForm
 from config import app_config
+from cmdb.cmdb_api_base import CmdbApiCallException
 
 import sys
 
@@ -37,11 +38,6 @@ def fill_server_info_form(server_form=None, env='', mirror='', server_status='',
     use_status_list = host_info.list_supported_use_status()
     server_status_list = host_info.list_supported_status()
     owner_list = host_info.list_supported_dba()
-    env_list = zip(env_list, env_list)
-    mirror_list = zip(mirror_list, mirror_list)
-    server_status_list = zip(server_status_list, server_status_list)
-    use_status_list = zip(use_status_list, use_status_list)
-    owner_list = zip(owner_list, owner_list)
     server_form.env.choices = env_list
     server_form.mirror.choices = mirror_list
     server_form.server_status.choices = server_status_list
@@ -88,120 +84,139 @@ def fill_inst_info_form(server_form=None, type='', status='', dba_owner=''):
 def online_system(server_id=None):
     host_info = ServerList(app.config['CMDB_API_ADDR'])
 
-    query_result = host_info.online_by_id(server_id)
-    if not query_result:
-        flash(host_info.get_last_error(), 'danger')
-        return redirect(url_for('server_info', server_id=server_id))
-    else:
+    try:
+        query_result = host_info.online_by_id(server_id)
         flash('Online Server Success', 'success')
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
+    finally:
         return redirect(url_for('server_info', server_id=server_id))
 
 @app.route("/offlineserver/<server_id>")
 def offline_server(server_id=None):
     host_info = ServerList(app.config['CMDB_API_ADDR'])
 
-    query_result = host_info.offline_by_id(server_id)
-    if not query_result:
-        flash(host_info.get_last_error(), 'danger')
-        return redirect(url_for('server_info', server_id=server_id))
-    else:
+    try:
+        query_result = host_info.offline_by_id(server_id)
         flash('Offline Server Success', 'success')
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
+    finally:
         return redirect(url_for('server_info', server_id=server_id))
 
 @app.route("/deleteserver/<server_id>")
 def delete_server(server_id=None):
     host_info = ServerList(app.config['CMDB_API_ADDR'])
 
-    query_result = host_info.delete_by_id(server_id)
-    if not query_result:
-        flash(host_info.get_last_error(), 'danger')
-        return redirect(url_for('server_info', server_id=server_id))
-    else:
+    try:
+        query_result = host_info.delete_by_id(server_id)
         flash('Delete Server Success', 'success')
         return redirect(url_for('server_list'))
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+        return redirect(url_for('server_info', server_id=server_id))
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
+        return redirect(url_for('server_info', server_id=server_id))
 
 @app.route("/serverinfo/<server_id>")
 def server_info(server_id=None):
-    data = dict({'page_data': dict()})
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
+    try:
+        data = dict({'page_data': dict()})
+        host_info = ServerList(app.config['CMDB_API_ADDR'])
 
-    single_server_info = dict()
-    query_result = host_info.info_by_id(server_id)
-    if not query_result:
-        flash(host_info.get_last_error(), 'danger')
-    else:
+        single_server_info = dict()
+        query_result = host_info.info_by_id(server_id)
         single_server_info = query_result[0]
-    data['page_data']['server_info'] = single_server_info
-    data['page_data']['server_info']['server_id'] = server_id
+        data['page_data']['server_info'] = single_server_info
+        data['page_data']['server_info']['server_id'] = server_id
 
-    machine_info = dict()
-    query_result = host_info.machine_info_by_id(server_id)
-    if not query_result:
-        flash(host_info.get_last_error(), 'danger')
-    else:
-        machine_info = query_result[0]
-    data['page_data']['machine_info'] = machine_info
+        machine_info = dict()
+        query_result = host_info.machine_info_by_id(server_id)
+        if len(query_result) > 0:
+            machine_info = query_result[0]
+            data['page_data']['machine_info'] = machine_info
 
-    data['page_name'] = 'Server Info'
-    return render_template('serverinfo.html', data=data)
+        data['page_name'] = 'Server Info'
+        return render_template('serverinfo.html', data=data)
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+        return render_template('blank.html')
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
+        return render_template('blank.html')
 
 @app.route("/initsystem/<server_id>", methods=['GET', 'POST'])
 def init_system(server_id=None):
-    data = dict()
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
-    if request.method == 'POST':
-        request_dict = dict()
-        request_dict['server_id'] = request.form.get('server_id')
-        request_dict['server_ip'] = request.form.get('server_ip')
-        request_dict['mirror'] = request.form.get('mirror')
-        request_dict['comment'] = request.form.get('comment')
-        result = host_info.init_system_with_mirror(request_dict)
-        if not result:
-            flash(host_info.get_last_error(), 'danger')
-        else:
+    try:
+        data = dict()
+        host_info = ServerList(app.config['CMDB_API_ADDR'])
+        if request.method == 'POST':
+            request_dict = dict()
+            request_dict['server_id'] = request.form.get('server_id')
+            request_dict['server_ip'] = request.form.get('server_ip')
+            request_dict['mirror'] = request.form.get('mirror')
+            request_dict['comment'] = request.form.get('comment')
+            result = host_info.init_system_with_mirror(request_dict)
             flash('System initial request sent', 'success')
-    else:
-        if not server_id or server_id == 0:
-            page_data = ''
+        else:
+            if not server_id or server_id == 0:
+                page_data = ''
 
-    page_data = host_info.info_by_id(server_id)[0]
-    server_form = ServerInitForm()
-    if request.form.get('mirror', False):
-        server_form = fill_init_server_form(server_form, request.form.get('mirror', ''))
-    else:
-        server_form = fill_init_server_form(server_form, mirror=page_data['mirror'])
-    data['page_name'] = 'Server Info'
-    data['form'] = server_form
-    data['page_data'] = page_data
-    return render_template('init_system.html', data=data)
+        page_data = host_info.info_by_id(server_id)[0]
+        server_form = ServerInitForm()
+        if request.form.get('mirror', False):
+            server_form = fill_init_server_form(server_form, request.form.get('mirror', ''))
+        else:
+            server_form = fill_init_server_form(server_form, mirror=page_data['mirror'])
+        data['page_name'] = 'Server Info'
+        data['form'] = server_form
+        data['page_data'] = page_data
+        return render_template('init_system.html', data=data)
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
 
 @app.route("/serverinfoedit/<server_id>", methods=['GET', 'POST'])
 def server_info_edit(server_id=None):
-    data = dict()
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
-    if request.method == 'POST':
-        page_data = request.form
-        result = host_info.save_server_info(page_data)
-        if not result:
-            flash(host_info.get_last_error(), 'danger')
-        else:
+    try:
+        data = dict()
+        host_info = ServerList(app.config['CMDB_API_ADDR'])
+        if request.method == 'POST':
+            page_data = request.form
+            host_info.save_server_info(page_data)
             flash('Edit Server Information Success', 'success')
-    else:
-        if not server_id or server_id == 0:
-            page_data = ''
         else:
-            page_data = host_info.info_by_id(server_id)[0]
+            if not server_id or server_id == 0:
+                page_data = ''
+            else:
+                page_data = host_info.info_by_id(server_id)[0]
 
-    server_form = ServerInfoForm()
-    supported_select_key = ['owner', 'mirror', 'server_status', 'env']
-    fill_select_data = dict()
-    for key in supported_select_key:
-        fill_select_data[key] = page_data[key]
-    server_form = fill_server_info_form(server_form=server_form, **fill_select_data)
-    data['page_name'] = 'Server Info'
-    data['form'] = server_form
-    data['page_data'] = page_data
-    return render_template('serverinfoedit.html', data=data)
+        server_form = ServerInfoForm()
+        supported_select_key = ['owner', 'mirror', 'server_status', 'env']
+        fill_select_data = dict()
+        for key in supported_select_key:
+            fill_select_data[key] = page_data[key]
+        server_form = fill_server_info_form(server_form=server_form, **fill_select_data)
+        data['page_name'] = 'Server Info'
+        data['form'] = server_form
+        data['page_data'] = page_data
+        return render_template('serverinfoedit.html', data=data)
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
 
 @app.route('/servermodify', methods=['GET', 'POST'])
 def servermodify():
@@ -209,176 +224,181 @@ def servermodify():
 
 @app.route("/serverlist")
 def server_list():
-    data = dict()
-    supported_query_key = ['owner', 'mirror', 'server_status', 'env', 'use_status']
-    query_condition = dict()
-    all_servers = ServerList(app.config['CMDB_API_ADDR'])
-    for key in supported_query_key:
-        request_value = request.args.get(key, False)
-        if request_value:
-            query_condition[key] = request_value
+    try:
+        data = dict()
+        supported_query_key = ['owner', 'mirror', 'server_status', 'env', 'use_status']
+        query_condition = dict()
+        all_servers = ServerList(app.config['CMDB_API_ADDR'])
+        for key in supported_query_key:
+            request_value = request.args.get(key, False)
+            if request_value:
+                query_condition[key] = request_value
 
-    page_data = all_servers.list_all(data=query_condition)
-    if all_servers.is_last_call_error():
-        flash(all_servers.get_last_error(), 'danger')
+        page_data = all_servers.list_all(data=query_condition)
 
-    filter_form = ServerInfoForm()
-    filter_form = fill_server_info_form(server_form=filter_form, **query_condition)
+        filter_form = ServerInfoForm()
+        filter_form = fill_server_info_form(server_form=filter_form, **query_condition)
 
-    message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
-    task_list = ({'name': 'task 1', 'progress': 10},)
-    data['message_list'] = message_list
-    data['task_list'] = task_list
-    data['page_name'] = 'Machine List'
-    data['page_data'] = page_data
-    data['filter_form'] = filter_form
-    return render_template('serverlist.html', data=data)
+        message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
+        task_list = ({'name': 'task 1', 'progress': 10},)
+        data['message_list'] = message_list
+        data['task_list'] = task_list
+        data['page_name'] = 'Machine List'
+        data['page_data'] = page_data
+        data['filter_form'] = filter_form
+        return render_template('serverlist.html', data=data)
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+        return render_template('blank.html')
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
+        return render_template('blank.html')
 
 @app.route("/addserver/", methods=['GET', 'POST'])
 def add_server():
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
-    env = host_info.list_supported_env()
-    mirror = host_info.list_supported_mirror()
-    use_status = host_info.list_supported_use_status()
-    owner = host_info.list_supported_dba()
-    env = zip(env, env)
-    mirror = zip(mirror, mirror)
-    use_status = zip(use_status, use_status)
-    owner = zip(owner, owner)
-    status = host_info.list_supported_status()
-    if status:
-        status = zip(status, status)
-    else:
-        flash(host_info.get_last_error(), 'danger')
-        status = tuple()
+    try:
+        host_info = ServerList(app.config['CMDB_API_ADDR'])
+        env = host_info.list_supported_env()
+        mirror = host_info.list_supported_mirror()
+        use_status = host_info.list_supported_use_status()
+        owner = host_info.list_supported_dba()
+        status = host_info.list_supported_status()
 
-    server_form = ServerInfoForm()
-    server_form.env.choices = env
-    server_form.mirror.choices = mirror
-    server_form.server_status.choices = status
-    server_form.use_status.choices = use_status
-    server_form.owner.choices = owner
-    data = dict()
-    if request.method == 'POST':
-        server_post = request.form
-        server_info = ServerList(app.config['CMDB_API_ADDR'])
-        result = server_info.add_server(server_post)
-        page_data = dict()
-        page_data['add_result'] = dict()
-        if not result:
-            flash(server_info.get_last_error(), 'danger')
-        else:
+        server_form = ServerInfoForm()
+        server_form.env.choices = env
+        server_form.mirror.choices = mirror
+        server_form.server_status.choices = status
+        server_form.use_status.choices = use_status
+        server_form.owner.choices = owner
+        data = dict()
+        if request.method == 'POST':
+            server_post = request.form
+            server_info = ServerList(app.config['CMDB_API_ADDR'])
+            result = server_info.add_server(server_post)
+            page_data = dict()
+            page_data['add_result'] = dict()
             flash('Add Server Success!', 'success')
             return redirect(url_for('server_info', server_id=request.form['server_id']))
-        data['form_data'] = server_post
-    else:
-        page_data = ''
-        data['form_data'] = dict()
-    data['page_name'] = 'Add Server'
-    data['form'] = server_form
-    data['page_data'] = page_data
-    return render_template('addserver.html', data=data)
-
+            data['form_data'] = server_post
+        else:
+            page_data = ''
+            data['form_data'] = dict()
+        data['page_name'] = 'Add Server'
+        data['form'] = server_form
+        data['page_data'] = page_data
+        return render_template('addserver.html', data=data)
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+        return render_template('blank.html')
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
+        return render_template('blank.html')
 ###################################
 #instance function part
 ###################################
 
 @app.route("/instancelist/")
 def instance_list():
-    data = dict({'page_data': dict()})
-    supported_query_key = ['dba_owner', 'type', 'status']
-    query_condition = dict()
-    all_insts = InstList(app.config['CMDB_API_ADDR'])
-    for key in supported_query_key:
-        request_value = request.args.get(key, False)
-        if request_value:
-            query_condition[key] = request_value
+    try:
+        data = dict({'page_data': dict()})
+        supported_query_key = ['dba_owner', 'type', 'status']
+        query_condition = dict()
+        all_insts = InstList(app.config['CMDB_API_ADDR'])
+        for key in supported_query_key:
+            request_value = request.args.get(key, False)
+            if request_value:
+                query_condition[key] = request_value
 
-    page_data = all_insts.list_all(data=query_condition)
-    if all_insts.is_last_call_error():
-        flash(all_insts.get_last_error(), 'danger')
+        page_data = all_insts.list_all(data=query_condition)
 
-    filter_form = InstanceInfoForm()
-    filter_form = fill_inst_info_form(server_form=filter_form, **query_condition)
+        filter_form = InstanceInfoForm()
+        filter_form = fill_inst_info_form(server_form=filter_form, **query_condition)
 
-    data['page_name'] = 'Instance List'
-    data['page_data']['inst_info'] = page_data
-    data['filter_form'] = filter_form
-    return render_template('instancelist.html', data=data)
+        data['page_name'] = 'Instance List'
+        data['page_data']['inst_info'] = page_data
+        data['filter_form'] = filter_form
+        return render_template('instancelist.html', data=data)
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
 
 @app.route("/instanceinfo/<id>")
 def instance_info(id=None):
-    data = dict({'page_data': dict()})
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
-    instance = InstList(app.config['CMDB_API_ADDR'])
+    try:
+        data = dict({'page_data': dict()})
+        host_info = ServerList(app.config['CMDB_API_ADDR'])
+        instance = InstList(app.config['CMDB_API_ADDR'])
 
-    single_instance_info = dict()
-    query_result = instance.info_by_id(id)
-    if not query_result:
-        flash(host_info.get_last_error(), 'danger')
-    else:
+        single_instance_info = dict()
+        query_result = instance.info_by_id(id)
         single_instance_info = query_result[0]
-    data['page_data']['instance_info'] = single_instance_info
+        data['page_data']['instance_info'] = single_instance_info
 
-    server_id = single_instance_info['server_id']
-    single_server_info = dict()
-    query_result = host_info.info_by_id(server_id)
-    if not query_result:
-        flash(host_info.get_last_error(), 'danger')
-    else:
+        server_id = single_instance_info['server_id']
+        single_server_info = dict()
+        query_result = host_info.info_by_id(server_id)
         single_server_info = query_result[0]
-    data['page_data']['server_info'] = single_server_info
-    data['page_data']['server_info']['server_id'] = server_id
+        data['page_data']['server_info'] = single_server_info
+        data['page_data']['server_info']['server_id'] = server_id
 
-    machine_info = dict()
-    query_result = host_info.machine_info_by_id(server_id)
-    if not query_result:
-        flash(host_info.get_last_error(), 'danger')
-    else:
+        machine_info = dict()
+        query_result = host_info.machine_info_by_id(server_id)
         machine_info = query_result[0]
-    data['page_data']['machine_info'] = machine_info
+        data['page_data']['machine_info'] = machine_info
 
-    data['page_name'] = 'Instance Info'
-    return render_template('instanceinfo.html', data=data)
+        data['page_name'] = 'Instance Info'
+        return render_template('instanceinfo.html', data=data)
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
 
 @app.route("/addinstance/", methods=['GET', 'POST'])
 def add_instance():
-    host_info = InstList(app.config['CMDB_API_ADDR'])
-    type_list = host_info.list_supported_type()
-    status_list = host_info.list_supported_status()
-    dba_owner_list = host_info.list_supported_dba()
+    try:
+        host_info = InstList(app.config['CMDB_API_ADDR'])
+        type_list = host_info.list_supported_type()
+        status_list = host_info.list_supported_status()
+        dba_owner_list = host_info.list_supported_dba()
 
-    server_form = InstanceInfoForm()
-    server_form.type.choices = type_list
-    server_form.status.choices = status_list
-    server_form.dba_owner.choices = dba_owner_list
+        server_form = InstanceInfoForm()
+        server_form.type.choices = type_list
+        server_form.status.choices = status_list
+        server_form.dba_owner.choices = dba_owner_list
 
-    data = dict({'page_data': {}, 'form_data': {}})
-    if request.method == 'POST':
-        server_post = request.form
-        server_info = InstList(app.config['CMDB_API_ADDR'])
-        result = server_info.add_instance(server_post)
-        page_data = dict()
-        page_data['add_result'] = dict()
-        if not result:
-            flash(server_info.get_last_error(), 'danger')
-        else:
+        data = dict({'page_data': {}, 'form_data': {}})
+        if request.method == 'POST':
+            server_post = request.form
+            server_info = InstList(app.config['CMDB_API_ADDR'])
+            result = server_info.add_instance(server_post)
+            page_data = dict()
+            page_data['add_result'] = dict()
             flash('Add Server Success!', 'success')
             return redirect(url_for('instance_list'))
-        data['form_data'] = server_post
-    elif request.method == 'GET':
-        server_id = request.args.get('server_id')
-        host_info = ServerList(app.config['CMDB_API_ADDR'])
-        server_ip = host_info.get_ip_by_id(server_id)
-        data['form_data']['server_id'] = server_id
-        data['form_data']['server_ip'] = server_ip
-        page_data = ''
-    else:
-        page_data = ''
-    data['page_name'] = 'Add Server'
-    data['form'] = server_form
-    data['page_data'] = page_data
-    return render_template('addinstance.html', data=data)
+            data['form_data'] = server_post
+        elif request.method == 'GET':
+            server_id = request.args.get('server_id')
+            host_info = ServerList(app.config['CMDB_API_ADDR'])
+            server_ip = host_info.get_ip_by_id(server_id)
+            data['form_data']['server_id'] = server_id
+            data['form_data']['server_ip'] = server_ip
+            page_data = ''
+        else:
+            page_data = ''
+        data['page_name'] = 'Add Server'
+        data['form'] = server_form
+        data['page_data'] = page_data
+        return render_template('addinstance.html', data=data)
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
 ###################################
 #instance function part
 ###################################
@@ -443,19 +463,25 @@ def blank():
 
 @app.route("/")
 def dashboard():
-    data = dict()
-    message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
-    task_list = ({'name': 'task 1', 'progress': 10},)
-    data['message_list'] = message_list
-    data['task_list'] = task_list
-    data['page_name'] = 'Dash Board'
-    servers = ServerList(app.config['CMDB_API_ADDR'])
-    instances = InstList(app.config['CMDB_API_ADDR'])
-    data['page_data'] = dict()
-    data['page_data']['server_cnt'] = servers.get_total_cnt()
-    data['page_data']['instance_cnt'] = instances.get_total_cnt()
-    return render_template('dashboard.html', data=data)
+    try:
+        data = dict()
+        message_list = ({'from': 'admin', 'time': '2013-01-01', 'content': 'This is a test message'},)
+        task_list = ({'name': 'task 1', 'progress': 10},)
+        data['message_list'] = message_list
+        data['task_list'] = task_list
+        data['page_name'] = 'Dash Board'
+        servers = ServerList(app.config['CMDB_API_ADDR'])
+        instances = InstList(app.config['CMDB_API_ADDR'])
+        data['page_data'] = dict()
+        data['page_data']['server_cnt'] = servers.get_total_cnt()
+        data['page_data']['instance_cnt'] = instances.get_total_cnt()
+        return render_template('dashboard.html', data=data)
 
+    except CmdbApiCallException, e:
+        flash(e.detail_msg(), 'danger')
+    except Exception, e:
+        msg = "Unknown Error: %s" % e.message
+        flash(msg, 'danger')
 
 if __name__ == "__main__":
     app.jinja_env.cache = None

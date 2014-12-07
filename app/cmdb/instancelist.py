@@ -2,62 +2,9 @@
 import urllib2
 import urllib
 import json
+from cmdb_api_base import CmdbApiBase
 
-class InstList:
-    api_addr = ""
-    last_error = 0
-    last_error_msg = ''
-
-
-    def __init__(self, api_addr):
-        self.api_addr = api_addr
-
-    def __call_interface__(self, module_name, interface_name, json_obj=None):
-        try:
-            if json_obj:
-                query_obj = {"data": json.dumps(json_obj)}
-            else:
-                query_obj = {"data": {}}
-            encoded_data = urllib.urlencode(query_obj)
-            fp = urllib2.urlopen(self.api_addr + module_name + '/' + interface_name, encoded_data, timeout=1)
-
-            result = json.load(fp)
-            if result['status'] == 0:
-                return result['data']
-            else:
-                msg = 'Call remote interface return error. Module: %s, Interface: %s' \
-                      ', Query String:%s, Error Code: %d, Error Message: %s'
-                if not json_obj:
-                    json_str = ''
-                else:
-                    json_str = json.dumps(json_obj)
-                self.last_error = result['status']
-                self.last_error_msg = msg % (module_name, interface_name, json_str, result['status'], result['data'])
-                return tuple()
-        except urllib2.URLError, e:
-            if not json_obj:
-                msg = 'Failed to call remote interface. Module: %s, Interface: %s, Error Message: %s'
-                self.last_error = -1
-                self.last_error_msg = msg % (module_name, interface_name, e)
-            else:
-                msg = 'Failed to call remote interface. Module: %s, Interface: %s, Query String: %s, Error Message: %s'
-                json_str = json.dumps(json_obj)
-                self.last_error = -1
-                self.last_error_msg = msg % (module_name, interface_name, json_str, e)
-
-            return tuple()
-
-    def is_last_call_error(self):
-        if self.last_error == 0:
-            return False
-        else:
-            return True
-
-    def get_last_error(self):
-        last_error_msg = self.last_error_msg
-        self.last_error = 0
-        self.last_error_msg = ''
-        return last_error_msg
+class InstList(CmdbApiBase):
 
     def list_all(self, data=None):
         result = self.__call_interface__('CMDB', 'getinstanceinfo', json_obj=data)

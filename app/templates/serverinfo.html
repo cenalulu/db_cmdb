@@ -178,10 +178,12 @@
                 </div>
                 <div class="panel-body">
                     <dl class="dl-horizontal">
+                    {% if data['page_data']['machine_info'] %}
                         {% for key, value in data['page_data']['machine_info'].iteritems() %}
                             <dt>{{ key }}</dt>
                             <dd>{{ value }}</dd>
                         {% endfor %}
+                    {% endif %}
                     </dl>
                 </div>
             </div>

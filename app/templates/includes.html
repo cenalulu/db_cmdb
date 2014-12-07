@@ -8,7 +8,11 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>{{ 'DBA Portal - ' + data['page_name'] }}</title>
+    <title>
+        {% if data %}
+            {{ 'DBA Portal - ' + data['page_name'] }}
+        {% endif %}
+    </title>
 
     <!-- Bootstrap Core CSS -->
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
