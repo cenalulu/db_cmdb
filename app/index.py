@@ -1,10 +1,10 @@
 # coding: utf8
 import requests
 from flask import Flask, render_template, request, url_for, redirect, flash
-from cmdb.serverlist import ServerList
-from cmdb.instancelist import InstList
+from cmdb.server import ServerList
+from cmdb.instance import InstList
 from cmdb.server_info_form import ServerInfoForm, ServerInitForm, InstanceInfoForm
-from config import app_config
+from config import AppConfig
 from cmdb.cmdb_api_base import CmdbApiCallException
 
 import sys
@@ -21,7 +21,7 @@ app.config['SECRET_KEY'] = 'cenalulu'
 #form function part
 ###################################
 def fill_init_server_form(server_form=None, mirror=''):
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
+    host_info = ServerList()
 
     mirror_list = host_info.list_supported_mirror()
     mirror_list = zip(mirror_list, mirror_list)
@@ -32,7 +32,7 @@ def fill_init_server_form(server_form=None, mirror=''):
     return server_form
 
 def fill_server_info_form(server_form=None, env='', mirror='', server_status='', use_status='', owner=''):
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
+    host_info = ServerList()
 
     env_list = host_info.list_supported_env()
     mirror_list = host_info.list_supported_mirror()
@@ -58,7 +58,7 @@ def fill_server_info_form(server_form=None, env='', mirror='', server_status='',
     return server_form
 
 def fill_inst_info_form(server_form=None, type='', status='', dba_owner=''):
-    host_info = InstList(app.config['CMDB_API_ADDR'])
+    host_info = InstList()
 
     type_list = host_info.list_supported_type()
     status_list = host_info.list_supported_status()
@@ -83,7 +83,7 @@ def fill_inst_info_form(server_form=None, type='', status='', dba_owner=''):
 
 @app.route("/online/<server_id>")
 def online_system(server_id=None):
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
+    host_info = ServerList()
 
     try:
         query_result = host_info.online_by_id(server_id)
@@ -100,7 +100,7 @@ def online_system(server_id=None):
 
 @app.route("/offlineserver/<server_id>")
 def offline_server(server_id=None):
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
+    host_info = ServerList()
 
     try:
         query_result = host_info.offline_by_id(server_id)
@@ -117,7 +117,7 @@ def offline_server(server_id=None):
 
 @app.route("/deleteserver/<server_id>")
 def delete_server(server_id=None):
-    host_info = ServerList(app.config['CMDB_API_ADDR'])
+    host_info = ServerList()
 
     try:
         query_result = host_info.delete_by_id(server_id)
@@ -137,7 +137,7 @@ def delete_server(server_id=None):
 def server_info(server_id=None):
     try:
         data = dict({'page_data': dict()})
-        host_info = ServerList(app.config['CMDB_API_ADDR'])
+        host_info = ServerList()
 
         single_server_info = dict()
         query_result = host_info.info_by_id(server_id)
@@ -165,7 +165,7 @@ def server_info(server_id=None):
 def init_system(server_id=None):
     try:
         data = dict()
-        host_info = ServerList(app.config['CMDB_API_ADDR'])
+        host_info = ServerList()
         if request.method == 'POST':
             request_dict = dict()
             request_dict['server_id'] = request.form.get('server_id')
@@ -200,7 +200,7 @@ def init_system(server_id=None):
 def server_info_edit(server_id=None):
     try:
         data = dict()
-        host_info = ServerList(app.config['CMDB_API_ADDR'])
+        host_info = ServerList()
         if request.method == 'POST':
             page_data = request.form
             host_info.save_server_info(page_data)
@@ -229,8 +229,6 @@ def server_info_edit(server_id=None):
         flash(msg, 'danger')
         return render_template('blank.html')
 
-@app.route('/servermodify', methods=['GET', 'POST'])
-def servermodify():
     return render_template('servermodify.html')
 
 @app.route("/serverlist")
@@ -239,7 +237,7 @@ def server_list():
         data = dict()
         supported_query_key = ['owner', 'mirror', 'server_status', 'env', 'use_status']
         query_condition = dict()
-        all_servers = ServerList(app.config['CMDB_API_ADDR'])
+        all_servers = ServerList()
         for key in supported_query_key:
             request_value = request.args.get(key, False)
             if request_value:
@@ -269,7 +267,7 @@ def server_list():
 @app.route("/addserver/", methods=['GET', 'POST'])
 def add_server():
     try:
-        host_info = ServerList(app.config['CMDB_API_ADDR'])
+        host_info = ServerList()
         env = host_info.list_supported_env()
         mirror = host_info.list_supported_mirror()
         use_status = host_info.list_supported_use_status()
@@ -285,7 +283,7 @@ def add_server():
         data = dict()
         if request.method == 'POST':
             server_post = request.form
-            server_info = ServerList(app.config['CMDB_API_ADDR'])
+            server_info = ServerList()
             result = server_info.add_server(server_post)
             page_data = dict()
             page_data['add_result'] = dict()
@@ -316,7 +314,7 @@ def instance_list():
         data = dict({'page_data': dict()})
         supported_query_key = ['dba_owner', 'type', 'status']
         query_condition = dict()
-        all_insts = InstList(app.config['CMDB_API_ADDR'])
+        all_insts = InstList()
         for key in supported_query_key:
             request_value = request.args.get(key, False)
             if request_value:
@@ -343,8 +341,8 @@ def instance_list():
 def instance_info(id=None):
     try:
         data = dict({'page_data': dict()})
-        host_info = ServerList(app.config['CMDB_API_ADDR'])
-        instance = InstList(app.config['CMDB_API_ADDR'])
+        host_info = ServerList()
+        instance = InstList()
 
         single_instance_info = dict()
         query_result = instance.info_by_id(id)
@@ -376,7 +374,7 @@ def instance_info(id=None):
 @app.route("/addinstance/", methods=['GET', 'POST'])
 def add_instance():
     try:
-        host_info = InstList(app.config['CMDB_API_ADDR'])
+        host_info = InstList()
         type_list = host_info.list_supported_type()
         status_list = host_info.list_supported_status()
         dba_owner_list = host_info.list_supported_dba()
@@ -389,7 +387,7 @@ def add_instance():
         data = dict({'page_data': {}, 'form_data': {}})
         if request.method == 'POST':
             server_post = request.form
-            server_info = InstList(app.config['CMDB_API_ADDR'])
+            server_info = InstList()
             result = server_info.add_instance(server_post)
             page_data = dict()
             page_data['add_result'] = dict()
@@ -398,7 +396,7 @@ def add_instance():
             data['form_data'] = server_post
         elif request.method == 'GET':
             server_id = request.args.get('server_id')
-            host_info = ServerList(app.config['CMDB_API_ADDR'])
+            host_info = ServerList()
             server_ip = host_info.get_ip_by_id(server_id)
             data['form_data']['server_id'] = server_id
             data['form_data']['server_ip'] = server_ip
@@ -487,8 +485,8 @@ def dashboard():
         data['message_list'] = message_list
         data['task_list'] = task_list
         data['page_name'] = 'Dash Board'
-        servers = ServerList(app.config['CMDB_API_ADDR'])
-        instances = InstList(app.config['CMDB_API_ADDR'])
+        servers = ServerList()
+        instances = InstList()
         data['page_data'] = dict()
         data['page_data']['server_cnt'] = servers.get_total_cnt()
         data['page_data']['instance_cnt'] = instances.get_total_cnt()
@@ -498,12 +496,11 @@ def dashboard():
         flash(e.message, 'danger')
         return render_template('dashboard.html', data=data)
     except Exception, e:
-        msg = "%s: %s" % (type(e).__name__, e.message)
+        msg = "[%s]: %s" % (type(e).__name__, e.message)
         flash(msg, 'danger')
         return render_template('blank.html')
 
 if __name__ == "__main__":
     app.jinja_env.cache = None
-    app.config.from_object(app_config)
-    app.run(host='0.0.0.0', port=app.config['PORT'])
+    app.run(host='0.0.0.0', port=AppConfig.PORT)
 

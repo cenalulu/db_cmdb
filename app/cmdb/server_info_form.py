@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask.ext.wtf import Form
 import wtforms
-from serverlist import ServerList
+from server import ServerList
 
 
 class ServerInitForm(Form):

@@ -2,6 +2,7 @@
 
 import requests as requests
 import json
+from config import CMDB_API_ADDR
 
 
 class CmdbApiCallException(Exception):
@@ -23,7 +24,7 @@ class CmdbApiBase:
     __last_error = 0
     __last_error_msg = ''
 
-    def __init__(self, __api_addr):
+    def __init__(self, __api_addr=CMDB_API_ADDR):
         self.__api_addr = __api_addr
 
     def __call_interface__(self, module_name, interface_name, json_obj=None):
@@ -32,20 +33,21 @@ class CmdbApiBase:
         :rtype : dict
         """
         try:
-            param_json_str = ''
-            param_json_str = json.dumps(json_obj)
-            query_obj = {"data": json.dumps(json_obj)}
+            if json_obj:
+                query_obj = {"data": json.dumps(json_obj)}
+            else:
+                query_obj = {"data": "{}"}
             fp = requests.get(self.__api_addr + module_name + '/' + interface_name, params=query_obj, timeout=1)
             if fp.status_code == requests.codes.ok:
                 result = fp.json()
                 if not result:
                     raise CmdbApiCallException(error_no=0, msg="Result from remote api is not a valid json str",
-                                               module=module_name, interface=interface_name, param=param_json_str)
+                                               module=module_name, interface=interface_name, param=json.dumps(json_obj))
                 if result['status'] == 0:
                     return result['data']
                 else:
                     raise CmdbApiCallException(error_no=result['status'], msg=result['data'],
-                                               module=module_name, interface=interface_name, param=param_json_str)
+                                               module=module_name, interface=interface_name, param=json.dumps(json_obj))
             else:
                 fp.raise_for_status()
         except Exception, e:
